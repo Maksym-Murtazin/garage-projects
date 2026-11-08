@@ -15,7 +15,7 @@ organize car projects, coordinate team members, and track workshop tasks.
 ## Development status
 
 Member, manufacturer, and car project models are ready.
-Members and manufacturers can be managed through the admin site.
+Members, manufacturers, and car projects can be managed through the admin site.
 Workshop pages are not implemented yet. Development takes place on
 the `develop` branch.
 
@@ -80,6 +80,10 @@ account with the appropriate permissions; a superuser has full access.
 
 Open **Manufacturers** to add, edit, or delete manufacturers. The list displays
 names and countries, supports searching both fields, and has a country filter.
+
+Open **Car projects** to manage projects and select their team members. The list
+shows the manufacturer, car model, year, and status. Search by project title,
+manufacturer, or car model, and filter by status or manufacturer.
 
 ## Tests
 
