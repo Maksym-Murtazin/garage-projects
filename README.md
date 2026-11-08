@@ -14,8 +14,9 @@ organize car projects, coordinate team members, and track workshop tasks.
 
 ## Development status
 
-The Django project structure and custom member model are ready. Workshop
-pages are not implemented yet. Development takes place on the `develop` branch.
+The custom member model, member administration, and manufacturer model are
+ready. Workshop pages are not implemented yet. Development takes place on
+the `develop` branch.
 
 ## Local setup
 
@@ -74,10 +75,10 @@ account with the appropriate permissions; a superuser has full access.
 ## Tests
 
 ```powershell
-.\.venv\Scripts\python.exe manage.py test members
+.\.venv\Scripts\python.exe manage.py test
 ```
 
-On Linux/macOS, use `.venv/bin/python manage.py test members`.
+On Linux/macOS, use `.venv/bin/python manage.py test`.
 
 ### Development settings
 

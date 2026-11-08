@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'members.apps.MembersConfig',
+    'workshop.apps.WorkshopConfig',
 ]
 
 AUTH_USER_MODEL = 'members.Member'
