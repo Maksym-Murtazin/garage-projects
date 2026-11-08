@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -10,3 +12,38 @@ class Manufacturer(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class CarProject(models.Model):
+    class Status(models.TextChoices):
+        PLANNED = "planned", "Planned"
+        IN_PROGRESS = "in_progress", "In progress"
+        COMPLETED = "completed", "Completed"
+
+    title = models.CharField(max_length=150)
+    manufacturer = models.ForeignKey(
+        Manufacturer,
+        on_delete=models.PROTECT,
+        related_name="car_projects",
+    )
+    model = models.CharField(max_length=100)
+    year = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1886), MaxValueValidator(9999)],
+    )
+    description = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PLANNED,
+    )
+    members = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="car_projects",
+        blank=True,
+    )
+
+    class Meta:
+        ordering = ["title", "pk"]
+
+    def __str__(self):
+        return self.title
