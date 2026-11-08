@@ -66,7 +66,10 @@ After applying migrations, you can create a local administrator:
 On Linux/macOS, use `.venv/bin/python manage.py createsuperuser`.
 Enter a username, email, employee code, and password when prompted.
 The admin login is available at http://127.0.0.1:8000/admin/.
-Member management in the admin will be added in the next step.
+Open **Members** to add or edit workshop members. The member list displays
+employee codes and supports searching by code, username, name, or email.
+Employee codes are required and must be unique. Admin access requires a staff
+account with the appropriate permissions; a superuser has full access.
 
 ## Tests
 
