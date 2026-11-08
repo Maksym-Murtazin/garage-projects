@@ -14,8 +14,8 @@ organize car projects, coordinate team members, and track workshop tasks.
 
 ## Development status
 
-The custom member model, member administration, and manufacturer model are
-ready. Workshop pages are not implemented yet. Development takes place on
+Member and manufacturer models and their administration are ready.
+Workshop pages are not implemented yet. Development takes place on
 the `develop` branch.
 
 ## Local setup
@@ -71,6 +71,9 @@ Open **Members** to add or edit workshop members. The member list displays
 employee codes and supports searching by code, username, name, or email.
 Employee codes are required and must be unique. Admin access requires a staff
 account with the appropriate permissions; a superuser has full access.
+
+Open **Manufacturers** to add, edit, or delete manufacturers. The list displays
+names and countries, supports searching both fields, and has a country filter.
 
 ## Tests
 
