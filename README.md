@@ -14,8 +14,8 @@ organize car projects, coordinate team members, and track workshop tasks.
 
 ## Development status
 
-The Django project structure is ready. Workshop features are not implemented
-yet. Development takes place on the `develop` branch.
+The Django project structure and custom member model are ready. Workshop
+pages are not implemented yet. Development takes place on the `develop` branch.
 
 ## Local setup
 
@@ -35,6 +35,7 @@ git switch develop
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe manage.py check
+.\.venv\Scripts\python.exe manage.py migrate
 .\.venv\Scripts\python.exe manage.py runserver
 ```
 
@@ -44,6 +45,7 @@ py -3.12 -m venv .venv
 python3.12 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python manage.py check
+.venv/bin/python manage.py migrate
 .venv/bin/python manage.py runserver
 ```
 
@@ -52,10 +54,27 @@ Stop the server with `Ctrl+C`.
 
 ### Database setup
 
-Do not run `migrate` or `createsuperuser` at this stage. The custom user model
-will be added before the first database migration. A warning about unapplied
-migrations is expected for now; database-backed pages, including the admin
-login, are not ready yet.
+The initial migration creates the custom `Member` model. Each member has a
+unique employee code: `GRG` followed by five ASCII digits, such as `GRG00001`.
+
+After applying migrations, you can create a local administrator:
+
+```powershell
+.\.venv\Scripts\python.exe manage.py createsuperuser
+```
+
+On Linux/macOS, use `.venv/bin/python manage.py createsuperuser`.
+Enter a username, email, employee code, and password when prompted.
+The admin login is available at http://127.0.0.1:8000/admin/.
+Member management in the admin will be added in the next step.
+
+## Tests
+
+```powershell
+.\.venv\Scripts\python.exe manage.py test members
+```
+
+On Linux/macOS, use `.venv/bin/python manage.py test members`.
 
 ### Development settings
 

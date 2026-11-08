@@ -41,7 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'members.apps.MembersConfig',
 ]
+
+AUTH_USER_MODEL = 'members.Member'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
