@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="panel login-panel">
+    <p class="eyebrow">Workshop workspace</p>
+    <h1>Sign in</h1>
+    <p class="muted">Use your workshop account to access projects and tasks.</p>
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <div class="form-field">
+          {{ field.label_tag }}
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit">Sign in</button>
+    </form>
+  </section>
+{% endblock %}

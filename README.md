@@ -16,8 +16,10 @@ organize car projects, coordinate team members, and track workshop tasks.
 
 Member, manufacturer, car project, task category, and task models are ready.
 All five models can be managed through the admin site.
-Workshop pages are not implemented yet. Development takes place on
-the `develop` branch.
+The workshop dashboard is available after signing in. It displays project,
+task, and active member counts, plus dashboard visits in the current session.
+Project and task management pages are not implemented yet. Development takes
+place on the `develop` branch.
 
 ## Local setup
 
@@ -51,7 +53,10 @@ python3.12 -m venv .venv
 .venv/bin/python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/ to see the default Django start page.
+Open http://127.0.0.1:8000/ and sign in with a workshop account to see the dashboard.
+Create an administrator using the steps below, or use a member account created
+through the admin site. Ordinary active members can access the dashboard without
+staff permissions. Use **Sign out** to end the session.
 Stop the server with `Ctrl+C`.
 
 ### Database setup

@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Garage Projects{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'workshop/css/styles.css' %}">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="container navigation" aria-label="Main navigation">
+      <a class="brand" href="{% url 'workshop:index' %}">Garage Projects</a>
+      {% if user.is_authenticated %}
+        <div class="account">
+          <span>{{ user.username }}</span>
+          {% if user.is_staff %}<a href="{% url 'admin:index' %}">Administration</a>{% endif %}
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="secondary" type="submit">Sign out</button>
+          </form>
+        </div>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
