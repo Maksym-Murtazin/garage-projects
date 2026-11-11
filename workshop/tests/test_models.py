@@ -4,7 +4,7 @@ from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 
-from workshop.models import CarProject, Manufacturer, TaskCategory
+from workshop.models import CarProject, Manufacturer, Task, TaskCategory
 
 
 class ManufacturerModelTests(TestCase):
@@ -168,3 +168,50 @@ class TaskCategoryModelTests(TestCase):
             list(TaskCategory.objects.values_list("name", flat=True)),
             ["Bodywork", "Electrical", "Suspension"],
         )
+
+
+class TaskModelTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.project = CarProject.objects.create(
+            title="E30 restoration", manufacturer=manufacturer,
+            model="320i", year=1989,
+        )
+        cls.category = TaskCategory.objects.create(name="Suspension")
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.project.members.add(cls.member)
+        cls.task = Task.objects.create(
+            title="Replace bushings", project=cls.project,
+            category=cls.category, assignee=cls.member,
+        )
+
+    def test_assignee_must_belong_to_selected_project(self):
+        self.task.full_clean()
+        other_project = CarProject.objects.create(
+            title="Track build", manufacturer=self.project.manufacturer,
+            model="M3", year=2004,
+        )
+        self.task.project = other_project
+        with self.assertRaises(ValidationError) as error:
+            self.task.full_clean()
+        self.assertIn("assignee", error.exception.message_dict)
+        self.task.assignee = None
+        self.task.full_clean()
+
+    def test_category_is_protected_and_deleting_assignee_preserves_task(self):
+        with self.assertRaises(ProtectedError):
+            self.category.delete()
+        self.member.delete()
+        self.task.refresh_from_db()
+        self.assertIsNone(self.task.assignee)
+        self.assertEqual(self.task.category, self.category)
+        self.assertEqual(self.task.project, self.project)
+
+    def test_deleting_project_removes_its_tasks_only(self):
+        self.project.delete()
+        self.assertFalse(Task.objects.filter(pk=self.task.pk).exists())
+        self.assertTrue(TaskCategory.objects.filter(pk=self.category.pk).exists())
+        self.assertTrue(get_user_model().objects.filter(pk=self.member.pk).exists())

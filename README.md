@@ -14,7 +14,7 @@ organize car projects, coordinate team members, and track workshop tasks.
 
 ## Development status
 
-Member, manufacturer, car project, and task category models are ready.
+Member, manufacturer, car project, task category, and task models are ready.
 Members, manufacturers, car projects, and task categories can be managed through
 the admin site.
 Workshop pages are not implemented yet. Development takes place on
@@ -66,7 +66,14 @@ multiple team members, and a member can work on several projects. Manufacturers
 referenced by projects cannot be deleted.
 
 Task categories have unique names, such as Bodywork, Electrical, or Suspension,
-and are sorted alphabetically. Tasks are not implemented yet.
+and are sorted alphabetically.
+
+Tasks belong to a project and category, with an optional assignee and due date.
+They have a title, optional description, status (to do, in progress, or done),
+and priority (low, medium, or high). Model validation requires an assignee to
+belong to the selected project. Deleting an assignee leaves the task unassigned;
+deleting a project also deletes its tasks. Categories used by tasks cannot be
+deleted. Task administration and workshop pages are not implemented yet.
 
 After applying migrations, you can create a local administrator:
 
