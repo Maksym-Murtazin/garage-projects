@@ -47,3 +47,14 @@ class CarProject(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class TaskCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name_plural = "task categories"
+
+    def __str__(self):
+        return self.name

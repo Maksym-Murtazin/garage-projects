@@ -4,7 +4,7 @@ from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 
-from workshop.models import CarProject, Manufacturer
+from workshop.models import CarProject, Manufacturer, TaskCategory
 
 
 class ManufacturerModelTests(TestCase):
@@ -142,3 +142,29 @@ class CarProjectModelTests(TestCase):
         first = self.create_project()
         second = self.create_project()
         self.assertEqual(list(CarProject.objects.all()), [first, second, last])
+
+
+class TaskCategoryModelTests(TestCase):
+    def test_create_category(self):
+        category = TaskCategory.objects.create(name="Suspension")
+        category.refresh_from_db()
+        self.assertEqual(category.name, "Suspension")
+        self.assertEqual(str(category), "Suspension")
+
+    def test_duplicate_name_is_rejected_by_database(self):
+        TaskCategory.objects.create(name="Suspension")
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            TaskCategory.objects.create(name="Suspension")
+
+    def test_name_is_required(self):
+        with self.assertRaises(ValidationError) as error:
+            TaskCategory(name="").full_clean()
+        self.assertIn("name", error.exception.message_dict)
+
+    def test_categories_are_ordered_by_name(self):
+        for name in ("Suspension", "Bodywork", "Electrical"):
+            TaskCategory.objects.create(name=name)
+        self.assertEqual(
+            list(TaskCategory.objects.values_list("name", flat=True)),
+            ["Bodywork", "Electrical", "Suspension"],
+        )
