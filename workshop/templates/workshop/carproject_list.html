@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Car projects | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Projects</p>
+    <h1>Car projects</h1>
+    <p class="muted">Builds and restorations across the workshop.</p>
+  </section>
+  <form class="search-form" method="get" role="search">
+    <div>
+      <label for="project-search">Search projects</label>
+      <input id="project-search" type="search" name="q" value="{{ query }}" placeholder="Title, manufacturer, or car model">
+    </div>
+    <button type="submit">Search</button>
+    {% if query %}<a href="{% url 'workshop:project-list' %}">Clear search</a>{% endif %}
+  </form>
+  <p class="muted">{{ paginator.count }} project{{ paginator.count|pluralize }}{% if query %} matching “{{ query }}”{% endif %}</p>
+  {% if projects %}
+    <div class="table-container">
+      <table>
+        <caption class="visually-hidden">Workshop car projects</caption>
+        <thead>
+          <tr>
+            <th scope="col">Project</th>
+            <th scope="col">Manufacturer</th>
+            <th scope="col">Model</th>
+            <th scope="col">Year</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects %}
+            <tr>
+              <th scope="row">{{ project.title }}</th>
+              <td>{{ project.manufacturer.name }}</td>
+              <td>{{ project.model }}</td>
+              <td>{{ project.year }}</td>
+              <td>{{ project.get_status_display }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="panel">
+      {% if query %}
+        <p>No projects match your search. Try another title, manufacturer, or model.</p>
+      {% else %}
+        <p>No car projects yet.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% include "includes/pagination.html" %}
+{% endblock %}

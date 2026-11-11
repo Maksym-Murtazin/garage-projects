@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.shortcuts import render
+from django.views.generic import ListView
 
 from .models import CarProject, Task
 
@@ -19,3 +22,26 @@ def index(request):
         "num_visits": visits,
     }
     return render(request, "workshop/index.html", context)
+
+
+class CarProjectListView(LoginRequiredMixin, ListView):
+    model = CarProject
+    template_name = "workshop/carproject_list.html"
+    context_object_name = "projects"
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset().select_related("manufacturer")
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            queryset = queryset.filter(
+                Q(title__icontains=query)
+                | Q(manufacturer__name__icontains=query)
+                | Q(model__icontains=query)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["query"] = self.request.GET.get("q", "").strip()
+        return context

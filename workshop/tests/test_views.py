@@ -61,3 +61,40 @@ class DashboardTests(TestCase):
             self.client.get(reverse("workshop:index")),
             reverse("login") + "?next=/",
         )
+
+
+class CarProjectListTests(TestCase):
+    def test_list_requires_login(self):
+        response = self.client.get(reverse("workshop:project-list"))
+        self.assertRedirects(response, reverse("login") + "?next=/projects/")
+
+    def test_search_and_pagination_preserve_query(self):
+        member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        self.client.force_login(member)
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        for number in range(11):
+            CarProject.objects.create(
+                title=f"Road & track {number:02}", manufacturer=manufacturer,
+                model="320i", year=1989,
+            )
+        CarProject.objects.create(
+            title="Restoration", manufacturer=manufacturer, model="M3", year=2004,
+        )
+        url = reverse("workshop:project-list")
+        for query, count in ((" bMw ", 12), ("320I", 11), ("missing", 0)):
+            with self.subTest(query=query):
+                response = self.client.get(url, {"q": query})
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.context["paginator"].count, count)
+
+        response = self.client.get(url, {"q": "Road & track"})
+        self.assertEqual(len(response.context["projects"]), 10)
+        self.assertContains(response, '?q=Road+%26+track&amp;page=2')
+        response = self.client.get(url, {"q": "Road & track", "page": 2})
+        self.assertEqual(response.context["paginator"].count, 11)
+        self.assertEqual(
+            [project.title for project in response.context["projects"]],
+            ["Road & track 10"],
+        )
