@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from workshop.models import CarProject, Manufacturer
+from workshop.models import CarProject, Manufacturer, Task, TaskCategory
 
 
 class ManufacturerAdminTests(TestCase):
@@ -148,3 +148,38 @@ class CarProjectAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("year", response.context["adminform"].form.errors)
         self.assertFalse(CarProject.objects.filter(title="Invalid project").exists())
+
+
+class TaskAdminTests(TestCase):
+    def test_assignment_requires_project_membership(self):
+        admin = get_user_model().objects.create_superuser(
+            username="admin", employee_code="GRG00001", password="test-password",
+        )
+        member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00002",
+        )
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        project = CarProject.objects.create(
+            title="E30 restoration", manufacturer=manufacturer,
+            model="320i", year=1989,
+        )
+        category = TaskCategory.objects.create(name="Suspension")
+        self.client.force_login(admin)
+        url = reverse("admin:workshop_task_add")
+        data = {
+            "title": "Replace bushings", "project": project.pk,
+            "category": category.pk, "assignee": member.pk,
+            "status": "todo", "priority": "medium", "_save": "Save",
+        }
+
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("assignee", response.context["adminform"].form.errors)
+        self.assertFalse(Task.objects.exists())
+
+        project.members.add(member)
+        response = self.client.post(url, data)
+        self.assertRedirects(response, reverse("admin:workshop_task_changelist"))
+        task = Task.objects.get(title="Replace bushings")
+        self.assertEqual(task.assignee, member)
+        self.assertEqual(task.project, project)
