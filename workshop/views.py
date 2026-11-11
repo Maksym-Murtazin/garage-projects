@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.shortcuts import render
-from django.views.generic import ListView
+from django.views.generic import DetailView, ListView
 
 from .models import CarProject, Task
 
@@ -44,4 +44,16 @@ class CarProjectListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["query"] = self.request.GET.get("q", "").strip()
+        return context
+
+
+class CarProjectDetailView(LoginRequiredMixin, DetailView):
+    model = CarProject
+    template_name = "workshop/carproject_detail.html"
+    context_object_name = "project"
+    queryset = CarProject.objects.select_related("manufacturer").prefetch_related("members")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tasks"] = self.object.tasks.select_related("category", "assignee")
         return context

@@ -33,7 +33,7 @@
         <tbody>
           {% for project in projects %}
             <tr>
-              <th scope="row">{{ project.title }}</th>
+              <th scope="row"><a href="{% url 'workshop:project-detail' project.pk %}">{{ project.title }}</a></th>
               <td>{{ project.manufacturer.name }}</td>
               <td>{{ project.model }}</td>
               <td>{{ project.year }}</td>

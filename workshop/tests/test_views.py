@@ -98,3 +98,58 @@ class CarProjectListTests(TestCase):
             [project.title for project in response.context["projects"]],
             ["Road & track 10"],
         )
+
+
+class CarProjectDetailTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.project = CarProject.objects.create(
+            title="E30 restoration", manufacturer=manufacturer,
+            model="320i", year=1989,
+        )
+
+    def test_login_required_and_missing_project_returns_404(self):
+        url = reverse("workshop:project-detail", args=[self.project.pk])
+        self.assertRedirects(
+            self.client.get(url), reverse("login") + "?next=" + url,
+        )
+        self.client.force_login(self.member)
+        self.assertEqual(
+            self.client.get(reverse("workshop:project-detail", args=[0])).status_code,
+            404,
+        )
+
+    def test_detail_displays_only_this_projects_team_and_tasks(self):
+        self.client.force_login(self.member)
+        url = reverse("workshop:project-detail", args=[self.project.pk])
+        response = self.client.get(url)
+        self.assertContains(response, "No description yet.")
+        self.assertContains(response, "No members have joined this project yet.")
+        self.assertContains(response, "No tasks have been added to this project yet.")
+
+        self.project.members.add(self.member)
+        category = TaskCategory.objects.create(name="Suspension")
+        task = Task.objects.create(
+            title="Replace bushings", project=self.project, category=category,
+        )
+        other_project = CarProject.objects.create(
+            title="Track build", manufacturer=self.project.manufacturer,
+            model="M3", year=2004,
+        )
+        outsider = get_user_model().objects.create_user(
+            username="painter", employee_code="GRG00002",
+        )
+        other_project.members.add(outsider)
+        Task.objects.create(title="Paint bodywork", project=other_project, category=category)
+
+        response = self.client.get(url)
+        self.assertQuerySetEqual(response.context["tasks"], [task])
+        for text in ("E30 restoration", "320i", "GRG00001", "Replace bushings",
+                     "Suspension", "Unassigned", "No due date"):
+            self.assertContains(response, text)
+        self.assertNotContains(response, "Paint bodywork")
+        self.assertNotContains(response, "GRG00002")
