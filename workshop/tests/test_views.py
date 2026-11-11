@@ -153,3 +153,69 @@ class CarProjectDetailTests(TestCase):
             self.assertContains(response, text)
         self.assertNotContains(response, "Paint bodywork")
         self.assertNotContains(response, "GRG00002")
+
+
+class CarProjectEditTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.project = CarProject.objects.create(
+            title="E30 restoration", manufacturer=cls.manufacturer,
+            model="320i", year=1989,
+        )
+        cls.data = {
+            "title": "Track build", "manufacturer": cls.manufacturer.pk,
+            "model": "M3", "year": 2004, "description": "Suspension refresh",
+            "status": CarProject.Status.IN_PROGRESS,
+        }
+
+    def test_anonymous_requests_cannot_create_or_edit(self):
+        for url in (
+            reverse("workshop:project-create"),
+            reverse("workshop:project-update", args=[self.project.pk]),
+        ):
+            for method in (self.client.get, self.client.post):
+                with self.subTest(url=url, method=method.__name__):
+                    response = method(url, self.data if method.__name__ == "post" else {})
+                    self.assertRedirects(response, reverse("login") + "?next=" + url)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title, "E30 restoration")
+        self.assertEqual(CarProject.objects.count(), 1)
+
+    def test_member_can_create_and_edit_without_changing_team(self):
+        self.client.force_login(self.member)
+        create_url = reverse("workshop:project-create")
+        self.assertEqual(self.client.get(create_url).status_code, 200)
+        response = self.client.post(create_url, self.data)
+        project = CarProject.objects.get(title="Track build")
+        self.assertRedirects(response, project.get_absolute_url())
+        project.members.add(self.member)
+        update_url = reverse("workshop:project-update", args=[project.pk])
+        response = self.client.get(update_url)
+        self.assertContains(response, "Suspension refresh")
+        response = self.client.post(update_url, {
+            **self.data, "title": "Completed build", "status": "completed", "members": [],
+        })
+        self.assertRedirects(response, project.get_absolute_url())
+        project.refresh_from_db()
+        self.assertEqual(project.title, "Completed build")
+        self.assertEqual(project.status, CarProject.Status.COMPLETED)
+        self.assertQuerySetEqual(project.members.all(), [self.member])
+
+    def test_invalid_data_is_not_saved(self):
+        self.client.force_login(self.member)
+        for url in (
+            reverse("workshop:project-create"),
+            reverse("workshop:project-update", args=[self.project.pk]),
+        ):
+            with self.subTest(url=url):
+                response = self.client.post(url, {**self.data, "year": 1800})
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("year", response.context["form"].errors)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.year, 1989)
+        self.assertEqual(self.project.title, "E30 restoration")
+        self.assertEqual(CarProject.objects.count(), 1)

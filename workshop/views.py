@@ -3,8 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.shortcuts import render
-from django.views.generic import DetailView, ListView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
+from .forms import CarProjectForm
 from .models import CarProject, Task
 
 
@@ -57,3 +58,15 @@ class CarProjectDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["tasks"] = self.object.tasks.select_related("category", "assignee")
         return context
+
+
+class CarProjectCreateView(LoginRequiredMixin, CreateView):
+    model = CarProject
+    form_class = CarProjectForm
+    template_name = "workshop/carproject_form.html"
+
+
+class CarProjectUpdateView(LoginRequiredMixin, UpdateView):
+    model = CarProject
+    form_class = CarProjectForm
+    template_name = "workshop/carproject_form.html"

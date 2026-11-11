@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit project{% else %}Create project{% endif %} | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Projects</p>
+    <h1>{% if object %}Edit project{% else %}Create project{% endif %}</h1>
+  </section>
+  <form method="post" class="panel edit-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class="form-field">
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}<p class="muted" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="form-actions">
+      <button type="submit">{% if object %}Save changes{% else %}Create project{% endif %}</button>
+      {% if object %}
+        <a href="{{ object.get_absolute_url }}">Cancel</a>
+      {% else %}
+        <a href="{% url 'workshop:project-list' %}">Cancel</a>
+      {% endif %}
+    </div>
+  </form>
+{% endblock %}

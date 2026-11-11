@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.urls import reverse
 
 
 class Manufacturer(models.Model):
@@ -48,6 +49,9 @@ class CarProject(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse("workshop:project-detail", kwargs={"pk": self.pk})
 
 
 class TaskCategory(models.Model):

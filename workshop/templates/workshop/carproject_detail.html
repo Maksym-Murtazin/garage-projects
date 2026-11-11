@@ -7,6 +7,7 @@
     <a href="{% url 'workshop:project-list' %}">Back to projects</a>
     <h1>{{ project.title }}</h1>
     <p class="muted">{{ project.manufacturer.name }} {{ project.model }} · {{ project.year }}</p>
+    <a class="button" href="{% url 'workshop:project-update' project.pk %}">Edit project</a>
   </section>
   <div class="project-overview">
     <section class="panel">
