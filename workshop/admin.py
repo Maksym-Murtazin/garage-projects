@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CarProject, Manufacturer
+from .models import CarProject, Manufacturer, TaskCategory
 
 
 @admin.register(Manufacturer)
@@ -17,3 +17,9 @@ class CarProjectAdmin(admin.ModelAdmin):
     list_filter = ("status", "manufacturer")
     list_select_related = ("manufacturer",)
     filter_horizontal = ("members",)
+
+
+@admin.register(TaskCategory)
+class TaskCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+    search_fields = ("name",)

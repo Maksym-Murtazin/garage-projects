@@ -15,7 +15,8 @@ organize car projects, coordinate team members, and track workshop tasks.
 ## Development status
 
 Member, manufacturer, car project, and task category models are ready.
-Members, manufacturers, and car projects can be managed through the admin site.
+Members, manufacturers, car projects, and task categories can be managed through
+the admin site.
 Workshop pages are not implemented yet. Development takes place on
 the `develop` branch.
 
@@ -65,8 +66,7 @@ multiple team members, and a member can work on several projects. Manufacturers
 referenced by projects cannot be deleted.
 
 Task categories have unique names, such as Bodywork, Electrical, or Suspension,
-and are sorted alphabetically. Tasks and category administration are not
-implemented yet.
+and are sorted alphabetically. Tasks are not implemented yet.
 
 After applying migrations, you can create a local administrator:
 
@@ -88,6 +88,8 @@ names and countries, supports searching both fields, and has a country filter.
 Open **Car projects** to manage projects and select their team members. The list
 shows the manufacturer, car model, year, and status. Search by project title,
 manufacturer, or car model, and filter by status or manufacturer.
+
+Open **Task categories** to add, edit, or delete categories and search by name.
 
 ## Tests
 
