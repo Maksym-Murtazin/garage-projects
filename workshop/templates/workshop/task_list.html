@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Tasks</p>
+    <h1>Tasks</h1>
+    <p class="muted">Find work by task title, project, assignee username, or employee code.</p>
+  </section>
+  <form method="get" class="task-filters" role="search">
+    {% for field in filter_form %}
+      <div>
+        {{ field.label_tag }}
+        {{ field }}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="form-actions">
+      <button type="submit">Apply</button>
+      <a href="{% url 'workshop:task-list' %}">Reset</a>
+    </div>
+  </form>
+  {% if filter_form.errors %}
+    <p class="panel">Correct the filters above to see matching tasks.</p>
+  {% else %}
+    <p class="muted">{{ paginator.count }} task{{ paginator.count|pluralize }}</p>
+    {% if tasks %}
+      <div class="table-container">
+        <table>
+          <caption class="visually-hidden">Workshop tasks</caption>
+          <thead>
+            <tr>
+              <th scope="col">Task</th>
+              <th scope="col">Project</th>
+              <th scope="col">Category</th>
+              <th scope="col">Assignee</th>
+              <th scope="col">Status</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Due date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              <tr>
+                <th scope="row">{{ task.title }}</th>
+                <td><a href="{{ task.project.get_absolute_url }}">{{ task.project.title }}</a></td>
+                <td>{{ task.category.name }}</td>
+                <td>{{ task.assignee|default:"Unassigned" }}</td>
+                <td>{{ task.get_status_display }}</td>
+                <td>{{ task.get_priority_display }}</td>
+                <td>{{ task.due_date|date:"M j, Y"|default:"No due date" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="panel">No tasks match the current filters. Try another search or reset the filters.</p>
+    {% endif %}
+    {% include "includes/pagination.html" %}
+  {% endif %}
+{% endblock %}

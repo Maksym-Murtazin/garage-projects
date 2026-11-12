@@ -8,7 +8,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.views.decorators.http import require_POST
 
-from .forms import CarProjectForm
+from .forms import CarProjectForm, TaskFilterForm
 from .models import CarProject, Task
 
 
@@ -100,3 +100,34 @@ def leave_project(request, pk):
         project.tasks.filter(assignee=request.user).update(assignee=None)
         project.members.remove(request.user)
     return redirect(project)
+
+
+class TaskListView(LoginRequiredMixin, ListView):
+    model = Task
+    template_name = "workshop/task_list.html"
+    context_object_name = "tasks"
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset().select_related("project", "category", "assignee")
+        self.filter_form = TaskFilterForm(self.request.GET)
+        if not self.filter_form.is_valid():
+            return queryset.none()
+        filters = self.filter_form.cleaned_data
+        if filters["q"]:
+            query = filters["q"]
+            queryset = queryset.filter(
+                Q(title__icontains=query)
+                | Q(project__title__icontains=query)
+                | Q(assignee__username__icontains=query)
+                | Q(assignee__employee_code__icontains=query)
+            )
+        for field in ("status", "priority", "project"):
+            if filters[field]:
+                queryset = queryset.filter(**{field: filters[field]})
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["filter_form"] = self.filter_form
+        return context

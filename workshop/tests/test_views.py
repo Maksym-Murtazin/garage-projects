@@ -345,3 +345,62 @@ class ProjectMembershipTests(TestCase):
                 {"csrfmiddlewaretoken": token},
             ).status_code, 404)
         self.assertFalse(self.project.members.exists())
+
+
+class TaskListTests(TestCase):
+    def test_list_requires_login(self):
+        url = reverse("workshop:task-list")
+        self.assertRedirects(self.client.get(url), reverse("login") + "?next=" + url)
+
+    def test_search_filters_and_pagination_work_together(self):
+        member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        self.client.force_login(member)
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        project = CarProject.objects.create(
+            title="Restoration", manufacturer=manufacturer, model="320i", year=1989,
+        )
+        project.members.add(member)
+        category = TaskCategory.objects.create(name="Suspension")
+        for number in range(11):
+            Task.objects.create(
+                title=f"Inspect & repair {number:02}", project=project,
+                category=category, assignee=member, status="todo", priority="high",
+            )
+        for overrides in ({"status": "done"}, {"priority": "low"}):
+            Task.objects.create(
+                **{"title": "Inspect & repair excluded", "project": project,
+                   "category": category, "status": "todo", "priority": "high",
+                   **overrides},
+            )
+        other_project = CarProject.objects.create(
+            title="Track build", manufacturer=manufacturer, model="M3", year=2004,
+        )
+        Task.objects.create(
+            title="Inspect & repair other", project=other_project,
+            category=category, priority="high",
+        )
+        url = reverse("workshop:task-list")
+        for query, count in ((" MECHANIC ", 11), ("grg00001", 11), ("Restoration", 13)):
+            with self.subTest(query=query):
+                response = self.client.get(url, {"q": query})
+                self.assertEqual(response.context["paginator"].count, count)
+        params = {"q": "Inspect & repair", "status": "todo",
+                  "priority": "high", "project": project.pk}
+        response = self.client.get(url, params)
+        self.assertEqual(response.context["paginator"].count, 11)
+        self.assertContains(
+            response,
+            f'?q=Inspect+%26+repair&amp;status=todo&amp;priority=high&amp;project={project.pk}&amp;page=2',
+        )
+        response = self.client.get(url, {**params, "page": 2})
+        self.assertEqual(
+            [task.title for task in response.context["tasks"]], ["Inspect & repair 10"],
+        )
+        for field, value in (("project", "invalid"), ("status", "unknown"), ("priority", "unknown")):
+            with self.subTest(field=field):
+                response = self.client.get(url, {field: value})
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(field, response.context["filter_form"].errors)
+                self.assertEqual(response.context["paginator"].count, 0)
