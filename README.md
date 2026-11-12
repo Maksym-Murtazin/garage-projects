@@ -29,8 +29,10 @@ their statuses. Team membership is managed separately from the project form.
 The task list supports search by title, project, assignee username, or employee
 code, with status, priority, and project filters. Pagination preserves these
 parameters. Task titles link to detail pages with the full description, project,
-category, assignee, status, priority, and due date. Task editing pages are not
-implemented yet. Development takes place
+category, assignee, status, priority, and due date. Signed-in members can create
+tasks from a project's detail page and edit them from the task detail page.
+The project stays fixed, and assignee choices are limited to its team members.
+Tasks can also be left unassigned. Development takes place
 on the `develop` branch.
 
 ## Local setup

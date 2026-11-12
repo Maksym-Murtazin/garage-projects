@@ -8,7 +8,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.views.decorators.http import require_POST
 
-from .forms import CarProjectForm, TaskFilterForm
+from .forms import CarProjectForm, TaskFilterForm, TaskForm
 from .models import CarProject, Task
 
 
@@ -138,3 +138,36 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
     template_name = "workshop/task_detail.html"
     context_object_name = "task"
     queryset = Task.objects.select_related("project", "category", "assignee")
+
+
+class TaskCreateView(LoginRequiredMixin, CreateView):
+    model = Task
+    form_class = TaskForm
+    template_name = "workshop/task_form.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        self.project = get_object_or_404(CarProject, pk=self.kwargs["pk"])
+        kwargs["project"] = self.project
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project"] = self.project
+        return context
+
+
+class TaskUpdateView(LoginRequiredMixin, UpdateView):
+    model = Task
+    form_class = TaskForm
+    template_name = "workshop/task_form.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["project"] = self.object.project
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project"] = self.object.project
+        return context

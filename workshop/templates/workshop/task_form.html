@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit task{% else %}Create task{% endif %} | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Tasks</p>
+    <h1>{% if object %}Edit task{% else %}Create task{% endif %}</h1>
+    <p>Project: <a href="{{ project.get_absolute_url }}">{{ project.title }}</a></p>
+    <p class="muted">Choose an assignee from the project team or leave the task unassigned.</p>
+  </section>
+  <form method="post" class="panel edit-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class="form-field">
+        {{ field.label_tag }}
+        {{ field }}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="form-actions">
+      <button type="submit">{% if object %}Save changes{% else %}Create task{% endif %}</button>
+      {% if object %}
+        <a href="{{ object.get_absolute_url }}">Cancel</a>
+      {% else %}
+        <a href="{{ project.get_absolute_url }}">Cancel</a>
+      {% endif %}
+    </div>
+  </form>
+{% endblock %}

@@ -450,3 +450,75 @@ class TaskDetailTests(TestCase):
         response = self.client.get(self.task.get_absolute_url())
         for text in ("No description yet.", "Unassigned", "No due date"):
             self.assertContains(response, text)
+
+
+class TaskEditTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.outsider = get_user_model().objects.create_user(
+            username="painter", employee_code="GRG00002",
+        )
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.project = CarProject.objects.create(
+            title="Restoration", manufacturer=manufacturer, model="320i", year=1989,
+        )
+        cls.project.members.add(cls.member)
+        category = TaskCategory.objects.create(name="Suspension")
+        cls.task = Task.objects.create(
+            title="Replace bushings", project=cls.project, category=category,
+        )
+        cls.data = {
+            "title": "Inspect mounts", "description": "Check for wear",
+            "category": category.pk, "assignee": cls.member.pk,
+            "status": "todo", "priority": "high", "due_date": "2027-03-15",
+        }
+
+    def test_anonymous_requests_cannot_create_or_edit(self):
+        for url in (
+            reverse("workshop:task-create", args=[self.project.pk]),
+            reverse("workshop:task-update", args=[self.task.pk]),
+        ):
+            self.assertRedirects(self.client.get(url), reverse("login") + "?next=" + url)
+            self.assertRedirects(self.client.post(url, self.data), reverse("login") + "?next=" + url)
+        self.assertEqual(Task.objects.count(), 1)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.title, "Replace bushings")
+
+    def test_create_and_edit_keep_project_and_allow_unassigned_task(self):
+        self.client.force_login(self.member)
+        url = reverse("workshop:task-create", args=[self.project.pk])
+        response = self.client.get(url)
+        self.assertQuerySetEqual(response.context["form"].fields["assignee"].queryset, [self.member])
+        response = self.client.post(url, {**self.data, "project": 0})
+        task = Task.objects.get(title="Inspect mounts")
+        self.assertRedirects(response, task.get_absolute_url())
+        self.assertEqual(task.project, self.project)
+        self.assertEqual(task.assignee, self.member)
+        update_url = reverse("workshop:task-update", args=[task.pk])
+        self.assertContains(self.client.get(update_url), 'value="2027-03-15"')
+        response = self.client.post(update_url, {
+            **self.data, "assignee": "", "due_date": "", "status": "done", "project": 0,
+        })
+        self.assertRedirects(response, task.get_absolute_url())
+        task.refresh_from_db()
+        self.assertIsNone(task.assignee)
+        self.assertIsNone(task.due_date)
+        self.assertEqual(task.status, Task.Status.DONE)
+        self.assertEqual(task.project, self.project)
+
+    def test_outsider_assignment_is_rejected_on_create_and_edit(self):
+        self.client.force_login(self.member)
+        for url in (
+            reverse("workshop:task-create", args=[self.project.pk]),
+            reverse("workshop:task-update", args=[self.task.pk]),
+        ):
+            response = self.client.post(url, {**self.data, "assignee": self.outsider.pk})
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("assignee", response.context["form"].errors)
+        self.assertEqual(Task.objects.count(), 1)
+        self.task.refresh_from_db()
+        self.assertIsNone(self.task.assignee)
+        self.assertEqual(self.task.title, "Replace bushings")

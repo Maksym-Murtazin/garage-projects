@@ -51,6 +51,7 @@
   </div>
   <section class="project-tasks" aria-labelledby="tasks-heading">
     <h2 id="tasks-heading">Project tasks</h2>
+    <p><a class="button" href="{% url 'workshop:task-create' project.pk %}">Create task</a></p>
     {% if tasks %}
       <div class="table-container">
         <table>

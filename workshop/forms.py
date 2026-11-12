@@ -22,3 +22,19 @@ class TaskFilterForm(forms.Form):
     project = forms.ModelChoiceField(
         queryset=CarProject.objects.all(), empty_label="All projects", required=False,
     )
+
+
+class TaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = ("title", "description", "category", "assignee", "status", "priority", "due_date")
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 5}),
+            "due_date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+        }
+
+    def __init__(self, *args, project, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.instance.project = project
+        self.fields["assignee"].queryset = project.members.all()
+        self.fields["assignee"].empty_label = "Unassigned"
