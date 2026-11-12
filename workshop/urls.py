@@ -7,6 +7,7 @@ app_name = "workshop"
 urlpatterns = [
     path("", views.index, name="index"),
     path("tasks/", views.TaskListView.as_view(), name="task-list"),
+    path("tasks/<int:pk>/", views.TaskDetailView.as_view(), name="task-detail"),
     path("projects/", views.CarProjectListView.as_view(), name="project-list"),
     path("projects/create/", views.CarProjectCreateView.as_view(), name="project-create"),
     path("projects/<int:pk>/edit/", views.CarProjectUpdateView.as_view(), name="project-update"),

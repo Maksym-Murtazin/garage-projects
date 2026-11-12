@@ -131,3 +131,10 @@ class TaskListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["filter_form"] = self.filter_form
         return context
+
+
+class TaskDetailView(LoginRequiredMixin, DetailView):
+    model = Task
+    template_name = "workshop/task_detail.html"
+    context_object_name = "task"
+    queryset = Task.objects.select_related("project", "category", "assignee")

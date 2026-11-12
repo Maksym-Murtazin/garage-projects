@@ -404,3 +404,49 @@ class TaskListTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(field, response.context["filter_form"].errors)
                 self.assertEqual(response.context["paginator"].count, 0)
+
+
+class TaskDetailTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.project = CarProject.objects.create(
+            title="Restoration", manufacturer=manufacturer, model="320i", year=1989,
+        )
+        cls.project.members.add(cls.member)
+        category = TaskCategory.objects.create(name="Suspension")
+        cls.task = Task.objects.create(
+            title="Replace bushings", project=cls.project, category=category,
+            assignee=cls.member, description="Check mounts.\nReplace worn bushings.",
+            status="in_progress", priority="high", due_date="2027-03-15",
+        )
+
+    def test_login_required_and_missing_task_returns_404(self):
+        url = self.task.get_absolute_url()
+        self.assertRedirects(self.client.get(url), reverse("login") + "?next=" + url)
+        self.client.force_login(self.member)
+        self.assertEqual(
+            self.client.get(reverse("workshop:task-detail", args=[0])).status_code, 404,
+        )
+
+    def test_details_links_and_optional_fields(self):
+        self.client.force_login(self.member)
+        response = self.client.get(self.task.get_absolute_url())
+        for text in (
+            "Replace bushings", "Check mounts.", "Replace worn bushings.",
+            "Suspension", "GRG00001", "In progress", "High", "Mar 15, 2027",
+            self.project.get_absolute_url(),
+        ):
+            self.assertContains(response, text)
+        for url in (reverse("workshop:task-list"), self.project.get_absolute_url()):
+            self.assertContains(self.client.get(url), self.task.get_absolute_url())
+        self.task.description = ""
+        self.task.assignee = None
+        self.task.due_date = None
+        self.task.save()
+        response = self.client.get(self.task.get_absolute_url())
+        for text in ("No description yet.", "Unassigned", "No due date"):
+            self.assertContains(response, text)

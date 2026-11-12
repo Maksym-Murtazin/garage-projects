@@ -105,6 +105,9 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse("workshop:task-detail", kwargs={"pk": self.pk})
+
     def clean(self):
         super().clean()
         if self.project_id and self.assignee_id:

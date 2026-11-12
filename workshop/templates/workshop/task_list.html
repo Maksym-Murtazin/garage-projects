@@ -43,7 +43,7 @@
           <tbody>
             {% for task in tasks %}
               <tr>
-                <th scope="row">{{ task.title }}</th>
+                <th scope="row"><a href="{{ task.get_absolute_url }}">{{ task.title }}</a></th>
                 <td><a href="{{ task.project.get_absolute_url }}">{{ task.project.title }}</a></td>
                 <td>{{ task.category.name }}</td>
                 <td>{{ task.assignee|default:"Unassigned" }}</td>

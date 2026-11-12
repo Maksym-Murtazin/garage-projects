@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }} | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <a href="{% url 'workshop:task-list' %}">Back to tasks</a>
+    <h1>{{ task.title }}</h1>
+    <p class="muted">Project: <a href="{{ task.project.get_absolute_url }}">{{ task.project.title }}</a></p>
+  </section>
+  <div class="project-overview">
+    <section class="panel">
+      <h2>Description</h2>
+      {% if task.description %}
+        <div class="project-description">{{ task.description|linebreaks }}</div>
+      {% else %}
+        <p class="muted">No description yet.</p>
+      {% endif %}
+    </section>
+    <section class="panel">
+      <h2>Task details</h2>
+      <dl class="project-facts">
+        <dt>Category</dt><dd>{{ task.category.name }}</dd>
+        <dt>Assignee</dt>
+        <dd>
+          {% if task.assignee %}
+            {{ task.assignee }} <span class="muted">· {{ task.assignee.employee_code }}</span>
+          {% else %}
+            Unassigned
+          {% endif %}
+        </dd>
+        <dt>Status</dt><dd>{{ task.get_status_display }}</dd>
+        <dt>Priority</dt><dd>{{ task.get_priority_display }}</dd>
+        <dt>Due date</dt><dd>{{ task.due_date|date:"M j, Y"|default:"No due date" }}</dd>
+      </dl>
+    </section>
+  </div>
+{% endblock %}
