@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Members | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Members</p>
+    <h1>Members</h1>
+    <p class="muted">The people behind the workshop's builds and restorations.</p>
+  </section>
+  <form class="search-form" method="get" role="search">
+    <div>
+      <label for="member-search">Search members</label>
+      <input id="member-search" type="search" name="q" value="{{ query }}" placeholder="Username, name, or employee code">
+    </div>
+    <button type="submit">Search</button>
+    {% if query %}<a href="{% url 'members:member-list' %}">Clear search</a>{% endif %}
+  </form>
+  <p class="muted">{{ paginator.count }} member{{ paginator.count|pluralize }}{% if query %} matching “{{ query }}”{% endif %}</p>
+  {% if members %}
+    <div class="table-container">
+      <table>
+        <caption class="visually-hidden">Workshop members</caption>
+        <thead>
+          <tr>
+            <th scope="col">Username</th>
+            <th scope="col">Full name</th>
+            <th scope="col">Employee code</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member in members %}
+            <tr>
+              <th scope="row">{{ member.username }}</th>
+              <td>{{ member.get_full_name|default:"—" }}</td>
+              <td>{{ member.employee_code }}</td>
+              <td>{{ member.is_active|yesno:"Active,Inactive" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="panel">
+      <p>No members match your search. Try another username, name, or employee code.</p>
+    </div>
+  {% endif %}
+  {% include "includes/pagination.html" %}
+{% endblock %}

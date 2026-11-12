@@ -34,6 +34,9 @@ tasks from a project's detail page and edit them from the task detail page.
 The project stays fixed, and assignee choices are limited to its team members.
 Tasks can also be left unassigned. Task deletion requires confirmation and
 returns to the project page, preserving the project and its other tasks.
+The member list shows usernames, full names, employee codes, and active or
+inactive status. Signed-in members can search by username, first name, last
+name, or employee code, with 10 results per page and search preserved in pagination.
 Development takes place
 on the `develop` branch.
 
