@@ -7,6 +7,7 @@
     <a href="{% url 'workshop:task-list' %}">Back to tasks</a>
     <h1>{{ task.title }}</h1>
     <a class="button" href="{% url 'workshop:task-update' task.pk %}">Edit task</a>
+    <a class="button danger" href="{% url 'workshop:task-delete' task.pk %}">Delete task</a>
     <p class="muted">Project: <a href="{{ task.project.get_absolute_url }}">{{ task.project.title }}</a></p>
   </section>
   <div class="project-overview">

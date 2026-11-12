@@ -171,3 +171,14 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["project"] = self.object.project
         return context
+
+
+class TaskDeleteView(LoginRequiredMixin, DeleteView):
+    model = Task
+    template_name = "workshop/task_confirm_delete.html"
+    context_object_name = "task"
+    queryset = Task.objects.select_related("project")
+    http_method_names = ["get", "post", "head", "options"]
+
+    def get_success_url(self):
+        return self.object.project.get_absolute_url()

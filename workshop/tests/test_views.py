@@ -522,3 +522,51 @@ class TaskEditTests(TestCase):
         self.task.refresh_from_db()
         self.assertIsNone(self.task.assignee)
         self.assertEqual(self.task.title, "Replace bushings")
+
+
+class TaskDeleteTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.project = CarProject.objects.create(
+            title="Restoration", manufacturer=manufacturer, model="320i", year=1989,
+        )
+        cls.project.members.add(cls.member)
+        cls.category = TaskCategory.objects.create(name="Suspension")
+        cls.task = Task.objects.create(
+            title="Replace bushings", project=cls.project,
+            category=cls.category, assignee=cls.member,
+        )
+        cls.other_task = Task.objects.create(
+            title="Inspect mounts", project=cls.project, category=cls.category,
+        )
+
+    def test_anonymous_visitor_cannot_delete_task(self):
+        url = reverse("workshop:task-delete", args=[self.task.pk])
+        for method in (self.client.get, self.client.post):
+            self.assertRedirects(method(url), reverse("login") + "?next=" + url)
+        self.assertTrue(Task.objects.filter(pk=self.task.pk).exists())
+
+    def test_confirmed_deletion_removes_only_selected_task(self):
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.member)
+        url = reverse("workshop:task-delete", args=[self.task.pk])
+        response = client.get(url)
+        self.assertContains(response, "Replace bushings")
+        self.assertContains(response, self.task.get_absolute_url())
+        self.assertTrue(Task.objects.filter(pk=self.task.pk).exists())
+        self.assertEqual(client.post(url).status_code, 403)
+        self.assertTrue(Task.objects.filter(pk=self.task.pk).exists())
+        response = client.post(url, {
+            "csrfmiddlewaretoken": client.cookies["csrftoken"].value,
+        })
+        self.assertRedirects(response, self.project.get_absolute_url())
+        self.assertFalse(Task.objects.filter(pk=self.task.pk).exists())
+        self.assertTrue(Task.objects.filter(pk=self.other_task.pk).exists())
+        self.assertTrue(CarProject.objects.filter(pk=self.project.pk).exists())
+        self.assertTrue(TaskCategory.objects.filter(pk=self.category.pk).exists())
+        self.assertTrue(self.project.members.filter(pk=self.member.pk).exists())
+        self.assertEqual(client.get(url).status_code, 404)
