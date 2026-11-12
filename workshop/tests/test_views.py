@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from workshop.models import CarProject, Manufacturer, Task, TaskCategory
@@ -219,3 +219,51 @@ class CarProjectEditTests(TestCase):
         self.assertEqual(self.project.year, 1989)
         self.assertEqual(self.project.title, "E30 restoration")
         self.assertEqual(CarProject.objects.count(), 1)
+
+
+class CarProjectDeleteTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.project = CarProject.objects.create(
+            title="E30 restoration", manufacturer=cls.manufacturer,
+            model="320i", year=1989,
+        )
+        cls.project.members.add(cls.member)
+        cls.category = TaskCategory.objects.create(name="Suspension")
+        cls.task = Task.objects.create(
+            title="Replace bushings", project=cls.project, category=cls.category,
+        )
+
+    def test_anonymous_visitor_cannot_delete_project(self):
+        url = reverse("workshop:project-delete", args=[self.project.pk])
+        for method in (self.client.get, self.client.post):
+            with self.subTest(method=method.__name__):
+                self.assertRedirects(method(url), reverse("login") + "?next=" + url)
+        self.assertTrue(CarProject.objects.filter(pk=self.project.pk).exists())
+        self.assertTrue(Task.objects.filter(pk=self.task.pk).exists())
+
+    def test_deletion_requires_post_with_csrf_and_preserves_shared_records(self):
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.member)
+        url = reverse("workshop:project-delete", args=[self.project.pk])
+        response = client.get(url)
+        self.assertContains(response, "E30 restoration")
+        self.assertContains(response, "all 1 of its tasks")
+        self.assertContains(response, self.project.get_absolute_url())
+        self.assertTrue(CarProject.objects.filter(pk=self.project.pk).exists())
+        self.assertEqual(client.post(url).status_code, 403)
+        self.assertTrue(Task.objects.filter(pk=self.task.pk).exists())
+
+        response = client.post(url, {
+            "csrfmiddlewaretoken": client.cookies["csrftoken"].value,
+        })
+        self.assertRedirects(response, reverse("workshop:project-list"))
+        self.assertFalse(CarProject.objects.filter(pk=self.project.pk).exists())
+        self.assertFalse(Task.objects.filter(pk=self.task.pk).exists())
+        self.assertTrue(Manufacturer.objects.filter(pk=self.manufacturer.pk).exists())
+        self.assertTrue(TaskCategory.objects.filter(pk=self.category.pk).exists())
+        self.assertTrue(get_user_model().objects.filter(pk=self.member.pk).exists())

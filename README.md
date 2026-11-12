@@ -21,8 +21,9 @@ task, and active member counts, plus dashboard visits in the current session.
 The project list supports searching by title, manufacturer, or car model and
 shows 10 projects per page, keeping the search when switching pages. Each project
 has a detail page with vehicle information, a description, team members, and tasks.
-Signed-in members can create and edit project details through the site. Team
-membership is managed separately from the project form. Task management pages
+Signed-in members can create, edit, and delete projects through the site.
+Deletion requires a confirmation page and removes the project's tasks as well.
+Team membership is managed separately from the project form. Task management pages
 are not implemented yet. Development takes place on the `develop` branch.
 
 ## Local setup

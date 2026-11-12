@@ -8,6 +8,7 @@
     <h1>{{ project.title }}</h1>
     <p class="muted">{{ project.manufacturer.name }} {{ project.model }} · {{ project.year }}</p>
     <a class="button" href="{% url 'workshop:project-update' project.pk %}">Edit project</a>
+    <a class="button danger" href="{% url 'workshop:project-delete' project.pk %}">Delete project</a>
   </section>
   <div class="project-overview">
     <section class="panel">

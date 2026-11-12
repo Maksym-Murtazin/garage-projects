@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.shortcuts import render
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from .forms import CarProjectForm
 from .models import CarProject, Task
@@ -70,3 +71,11 @@ class CarProjectUpdateView(LoginRequiredMixin, UpdateView):
     model = CarProject
     form_class = CarProjectForm
     template_name = "workshop/carproject_form.html"
+
+
+class CarProjectDeleteView(LoginRequiredMixin, DeleteView):
+    model = CarProject
+    template_name = "workshop/carproject_confirm_delete.html"
+    context_object_name = "project"
+    success_url = reverse_lazy("workshop:project-list")
+    http_method_names = ["get", "post", "head", "options"]
