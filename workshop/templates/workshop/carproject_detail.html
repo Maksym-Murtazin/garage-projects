@@ -30,7 +30,7 @@
       <h2>Project team</h2>
       <ul class="team-list">
         {% for member in project.members.all %}
-          <li>{{ member }} <span class="muted">· {{ member.employee_code }}</span></li>
+          <li><a href="{% url 'members:member-detail' member.pk %}">{{ member }}</a> <span class="muted">· {{ member.employee_code }}</span></li>
         {% empty %}
           <li class="muted">No members have joined this project yet.</li>
         {% endfor %}

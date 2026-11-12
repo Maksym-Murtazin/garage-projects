@@ -32,7 +32,7 @@
         <tbody>
           {% for member in members %}
             <tr>
-              <th scope="row">{{ member.username }}</th>
+              <th scope="row"><a href="{% url 'members:member-detail' member.pk %}">{{ member.username }}</a></th>
               <td>{{ member.get_full_name|default:"—" }}</td>
               <td>{{ member.employee_code }}</td>
               <td>{{ member.is_active|yesno:"Active,Inactive" }}</td>

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
-from django.views.generic import ListView
+from django.views.generic import DetailView, ListView
 
 
 class MemberListView(LoginRequiredMixin, ListView):
@@ -25,4 +25,16 @@ class MemberListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["query"] = self.request.GET.get("q", "").strip()
+        return context
+
+
+class MemberDetailView(LoginRequiredMixin, DetailView):
+    model = get_user_model()
+    template_name = "members/member_detail.html"
+    context_object_name = "member"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["projects"] = self.object.car_projects.select_related("manufacturer")
+        context["tasks"] = self.object.assigned_tasks.select_related("project")
         return context

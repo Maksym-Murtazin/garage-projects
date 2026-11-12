@@ -26,7 +26,7 @@
         <dt>Assignee</dt>
         <dd>
           {% if task.assignee %}
-            {{ task.assignee }} <span class="muted">· {{ task.assignee.employee_code }}</span>
+            <a href="{% url 'members:member-detail' task.assignee.pk %}">{{ task.assignee }}</a> <span class="muted">· {{ task.assignee.employee_code }}</span>
           {% else %}
             Unassigned
           {% endif %}

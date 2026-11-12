@@ -37,6 +37,9 @@ returns to the project page, preserving the project and its other tasks.
 The member list shows usernames, full names, employee codes, and active or
 inactive status. Signed-in members can search by username, first name, last
 name, or employee code, with 10 results per page and search preserved in pagination.
+Each member has a detail page with their workshop information, joined projects,
+and assigned tasks, including completed work. Member profiles are linked from
+the member list, project teams, and task detail pages.
 Development takes place
 on the `develop` branch.
 

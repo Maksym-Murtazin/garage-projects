@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ member.username }} | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <a href="{% url 'members:member-list' %}">Back to members</a>
+    <h1>{{ member.username }}</h1>
+  </section>
+  <section class="panel">
+    <h2>Member details</h2>
+    <dl class="project-facts">
+      <dt>Full name</dt><dd>{{ member.get_full_name|default:"Not provided" }}</dd>
+      <dt>Employee code</dt><dd>{{ member.employee_code }}</dd>
+      <dt>Status</dt><dd>{{ member.is_active|yesno:"Active,Inactive" }}</dd>
+    </dl>
+  </section>
+  <section aria-labelledby="projects-heading">
+    <h2 id="projects-heading">Projects</h2>
+    {% if projects %}
+      <div class="table-container">
+        <table>
+          <caption class="visually-hidden">Projects for {{ member.username }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Project</th>
+              <th scope="col">Car</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for project in projects %}
+              <tr>
+                <th scope="row"><a href="{{ project.get_absolute_url }}">{{ project.title }}</a></th>
+                <td>{{ project.manufacturer.name }} {{ project.model }} · {{ project.year }}</td>
+                <td>{{ project.get_status_display }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="panel muted">This member has not joined any projects yet.</p>
+    {% endif %}
+  </section>
+  <section aria-labelledby="tasks-heading">
+    <h2 id="tasks-heading">Assigned tasks</h2>
+    {% if tasks %}
+      <div class="table-container">
+        <table>
+          <caption class="visually-hidden">Tasks assigned to {{ member.username }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Task</th>
+              <th scope="col">Project</th>
+              <th scope="col">Status</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Due date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              <tr>
+                <th scope="row"><a href="{{ task.get_absolute_url }}">{{ task.title }}</a></th>
+                <td><a href="{{ task.project.get_absolute_url }}">{{ task.project.title }}</a></td>
+                <td>{{ task.get_status_display }}</td>
+                <td>{{ task.get_priority_display }}</td>
+                <td>{{ task.due_date|date:"M j, Y"|default:"No due date" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="panel muted">No tasks are assigned to this member.</p>
+    {% endif %}
+  </section>
+{% endblock %}
