@@ -23,7 +23,9 @@ shows 10 projects per page, keeping the search when switching pages. Each projec
 has a detail page with vehicle information, a description, team members, and tasks.
 Signed-in members can create, edit, and delete projects through the site.
 Deletion requires a confirmation page and removes the project's tasks as well.
-Team membership is managed separately from the project form. Task management pages
+Members can join or leave a project from its detail page. Leaving unassigns all
+of that member's tasks in the project, including completed tasks, without changing
+their statuses. Team membership is managed separately from the project form. Task management pages
 are not implemented yet. Development takes place on the `develop` branch.
 
 ## Local setup

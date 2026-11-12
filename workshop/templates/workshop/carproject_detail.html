@@ -35,6 +35,18 @@
           <li class="muted">No members have joined this project yet.</li>
         {% endfor %}
       </ul>
+      {% if is_project_member %}
+        <p class="muted" id="leave-project-help">Leaving the team will unassign all your tasks in this project, including completed tasks. Their statuses will stay unchanged.</p>
+        <form method="post" action="{% url 'workshop:project-leave' project.pk %}">
+          {% csrf_token %}
+          <button type="submit" aria-describedby="leave-project-help">Leave project</button>
+        </form>
+      {% else %}
+        <form method="post" action="{% url 'workshop:project-join' project.pk %}">
+          {% csrf_token %}
+          <button type="submit">Join project</button>
+        </form>
+      {% endif %}
     </section>
   </div>
   <section class="project-tasks" aria-labelledby="tasks-heading">

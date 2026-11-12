@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Q
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.decorators.http import require_POST
 
 from .forms import CarProjectForm
 from .models import CarProject, Task
@@ -58,6 +60,7 @@ class CarProjectDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["tasks"] = self.object.tasks.select_related("category", "assignee")
+        context["is_project_member"] = self.request.user in self.object.members.all()
         return context
 
 
@@ -79,3 +82,21 @@ class CarProjectDeleteView(LoginRequiredMixin, DeleteView):
     context_object_name = "project"
     success_url = reverse_lazy("workshop:project-list")
     http_method_names = ["get", "post", "head", "options"]
+
+
+@login_required
+@require_POST
+def join_project(request, pk):
+    project = get_object_or_404(CarProject, pk=pk)
+    project.members.add(request.user)
+    return redirect(project)
+
+
+@login_required
+@require_POST
+def leave_project(request, pk):
+    project = get_object_or_404(CarProject, pk=pk)
+    with transaction.atomic():
+        project.tasks.filter(assignee=request.user).update(assignee=None)
+        project.members.remove(request.user)
+    return redirect(project)

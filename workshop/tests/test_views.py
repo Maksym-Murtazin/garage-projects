@@ -267,3 +267,81 @@ class CarProjectDeleteTests(TestCase):
         self.assertTrue(Manufacturer.objects.filter(pk=self.manufacturer.pk).exists())
         self.assertTrue(TaskCategory.objects.filter(pk=self.category.pk).exists())
         self.assertTrue(get_user_model().objects.filter(pk=self.member.pk).exists())
+
+
+class ProjectMembershipTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.colleague = get_user_model().objects.create_user(
+            username="painter", employee_code="GRG00002",
+        )
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.project = CarProject.objects.create(
+            title="Restoration", manufacturer=manufacturer, model="320i", year=1989,
+        )
+        cls.other_project = CarProject.objects.create(
+            title="Track build", manufacturer=manufacturer, model="M3", year=2004,
+        )
+        cls.category = TaskCategory.objects.create(name="Suspension")
+
+    def test_join_and_leave_change_only_current_members_project_assignments(self):
+        self.client.force_login(self.member)
+        self.project.members.add(self.colleague)
+        self.other_project.members.add(self.member)
+        join_url = reverse("workshop:project-join", args=[self.project.pk])
+        leave_url = reverse("workshop:project-leave", args=[self.project.pk])
+        self.assertContains(self.client.get(self.project.get_absolute_url()), "Join project")
+        for _ in range(2):
+            self.assertRedirects(
+                self.client.post(join_url, {"member": self.colleague.pk}),
+                self.project.get_absolute_url(),
+            )
+        self.assertCountEqual(self.project.members.all(), [self.member, self.colleague])
+        self.assertContains(self.client.get(self.project.get_absolute_url()), "Leave project")
+        for status in Task.Status.values:
+            Task.objects.create(
+                title=status, status=status, project=self.project,
+                category=self.category, assignee=self.member,
+            )
+        colleague_task = Task.objects.create(
+            title="Paint body", project=self.project,
+            category=self.category, assignee=self.colleague,
+        )
+        other_task = Task.objects.create(
+            title="Track suspension", project=self.other_project,
+            category=self.category, assignee=self.member,
+        )
+        for _ in range(2):
+            self.assertRedirects(self.client.post(leave_url), self.project.get_absolute_url())
+        self.assertQuerySetEqual(self.project.members.all(), [self.colleague])
+        self.assertCountEqual(
+            self.project.tasks.filter(assignee=None).values_list("status", flat=True),
+            Task.Status.values,
+        )
+        colleague_task.refresh_from_db()
+        other_task.refresh_from_db()
+        self.assertEqual(colleague_task.assignee, self.colleague)
+        self.assertEqual(other_task.assignee, self.member)
+        self.assertTrue(self.other_project.members.filter(pk=self.member.pk).exists())
+
+    def test_membership_changes_require_login_post_and_csrf(self):
+        client = Client(enforce_csrf_checks=True)
+        for action in ("join", "leave"):
+            url = reverse(f"workshop:project-{action}", args=[self.project.pk])
+            self.assertRedirects(self.client.post(url), reverse("login") + "?next=" + url)
+        client.force_login(self.member)
+        response = client.get(self.project.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        token = client.cookies["csrftoken"].value
+        for action in ("join", "leave"):
+            url = reverse(f"workshop:project-{action}", args=[self.project.pk])
+            self.assertEqual(client.get(url).status_code, 405)
+            self.assertEqual(client.post(url).status_code, 403)
+            self.assertEqual(client.post(
+                reverse(f"workshop:project-{action}", args=[0]),
+                {"csrfmiddlewaretoken": token},
+            ).status_code, 404)
+        self.assertFalse(self.project.members.exists())
