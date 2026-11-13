@@ -9,7 +9,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.views.decorators.http import require_POST
 
-from .forms import CarProjectForm, ManufacturerForm, TaskFilterForm, TaskForm
+from .forms import CarProjectForm, ManufacturerForm, TaskCategoryForm, TaskFilterForm, TaskForm
 from .models import CarProject, Manufacturer, Task, TaskCategory
 
 
@@ -46,6 +46,20 @@ class TaskCategoryListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["query"] = self.request.GET.get("q", "").strip()
         return context
+
+
+class TaskCategoryCreateView(LoginRequiredMixin, CreateView):
+    model = TaskCategory
+    form_class = TaskCategoryForm
+    template_name = "workshop/taskcategory_form.html"
+    success_url = reverse_lazy("workshop:category-list")
+
+
+class TaskCategoryUpdateView(LoginRequiredMixin, UpdateView):
+    model = TaskCategory
+    form_class = TaskCategoryForm
+    template_name = "workshop/taskcategory_form.html"
+    success_url = reverse_lazy("workshop:category-list")
 
 
 class ManufacturerListView(LoginRequiredMixin, ListView):

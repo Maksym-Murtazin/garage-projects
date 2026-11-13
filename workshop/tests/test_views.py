@@ -761,3 +761,52 @@ class TaskCategoryListTests(TestCase):
             [category.name for category in response.context["categories"]],
             ["Body & Paint 10"],
         )
+
+
+class TaskCategoryFormTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.category = TaskCategory.objects.create(name="Bodywork")
+        cls.create_url = reverse("workshop:category-create")
+        cls.update_url = reverse("workshop:category-update", args=[cls.category.pk])
+
+    def test_login_required_and_create_and_edit_preserve_task_links(self):
+        for url in (self.create_url, self.update_url):
+            for method in (self.client.get, self.client.post):
+                self.assertRedirects(method(url), f"{reverse('login')}?next={url}")
+        self.client.force_login(self.member)
+        self.assertContains(self.client.get(self.create_url), 'name="csrfmiddlewaretoken"')
+        response = self.client.post(self.create_url, {"name": "Suspension"})
+        self.assertRedirects(response, reverse("workshop:category-list"))
+        self.assertTrue(TaskCategory.objects.filter(name="Suspension").exists())
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        project = CarProject.objects.create(
+            title="E30 restoration", manufacturer=manufacturer, model="E30", year=1990,
+        )
+        task = Task.objects.create(title="Repair panels", project=project, category=self.category)
+        response = self.client.get(self.update_url)
+        self.assertEqual(response.context["form"].initial["name"], "Bodywork")
+        response = self.client.post(self.update_url, {"name": "Body & Paint"})
+        self.assertRedirects(response, reverse("workshop:category-list"))
+        task.refresh_from_db()
+        self.assertEqual(task.category_id, self.category.pk)
+        self.assertEqual(task.category.name, "Body & Paint")
+        self.assertEqual(TaskCategory.objects.count(), 2)
+
+    def test_empty_and_duplicate_names_are_rejected(self):
+        TaskCategory.objects.create(name="Suspension")
+        self.client.force_login(self.member)
+        for url in (self.create_url, self.update_url):
+            for name in (" ", "Suspension"):
+                with self.subTest(url=url, name=name):
+                    response = self.client.post(url, {"name": name})
+                    self.assertEqual(response.status_code, 200)
+                    self.assertIn("name", response.context["form"].errors)
+                    self.assertEqual(TaskCategory.objects.count(), 2)
+                    self.category.refresh_from_db()
+                    self.assertEqual(self.category.name, "Bodywork")
+        response = self.client.post(self.update_url, {"name": "Bodywork"})
+        self.assertRedirects(response, reverse("workshop:category-list"))

@@ -65,6 +65,9 @@ returns the explanation, including when a project was added after opening the pa
 The task category list is available to signed-in members, with search by name
 and alphabetical ordering. It shows 10 categories per page and preserves the
 search when switching pages.
+Signed-in members can create and edit task categories from this list. Names are
+required and must be unique. Saving returns to the list, and renaming a category
+preserves its links to existing tasks.
 Development takes place
 on the `develop` branch.
 

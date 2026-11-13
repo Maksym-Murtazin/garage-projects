@@ -7,6 +7,7 @@
     <p class="eyebrow">Workshop / Categories</p>
     <h1>Task categories</h1>
     <p class="muted">Types of work used to organize workshop tasks.</p>
+    <a class="button" href="{% url 'workshop:category-create' %}">Create category</a>
   </section>
   <form class="search-form" method="get" role="search">
     <div>
@@ -22,11 +23,17 @@
       <table>
         <caption class="visually-hidden">Workshop task categories</caption>
         <thead>
-          <tr><th scope="col">Name</th></tr>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Actions</th>
+          </tr>
         </thead>
         <tbody>
           {% for category in categories %}
-            <tr><th scope="row">{{ category.name }}</th></tr>
+            <tr>
+              <th scope="row">{{ category.name }}</th>
+              <td><a href="{% url 'workshop:category-update' category.pk %}" aria-label="Edit {{ category.name }}">Edit</a></td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>

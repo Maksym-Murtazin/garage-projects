@@ -1,6 +1,12 @@
 from django import forms
 
-from .models import CarProject, Manufacturer, Task
+from .models import CarProject, Manufacturer, Task, TaskCategory
+
+
+class TaskCategoryForm(forms.ModelForm):
+    class Meta:
+        model = TaskCategory
+        fields = ("name",)
 
 
 class ManufacturerForm(forms.ModelForm):
