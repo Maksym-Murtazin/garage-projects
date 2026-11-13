@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Q
+from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
@@ -59,6 +60,25 @@ class ManufacturerUpdateView(LoginRequiredMixin, UpdateView):
     form_class = ManufacturerForm
     template_name = "workshop/manufacturer_form.html"
     success_url = reverse_lazy("workshop:manufacturer-list")
+
+
+class ManufacturerDeleteView(LoginRequiredMixin, DeleteView):
+    model = Manufacturer
+    template_name = "workshop/manufacturer_confirm_delete.html"
+    context_object_name = "manufacturer"
+    success_url = reverse_lazy("workshop:manufacturer-list")
+    http_method_names = ["get", "post", "head", "options"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["projects"] = self.object.car_projects.all()
+        return context
+
+    def form_valid(self, form):
+        try:
+            return super().form_valid(form)
+        except ProtectedError:
+            return self.render_to_response(self.get_context_data(form=form), status=409)
 
 
 class CarProjectListView(LoginRequiredMixin, ListView):

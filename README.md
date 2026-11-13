@@ -58,6 +58,10 @@ and pagination preserves the search.
 Signed-in members can create and edit manufacturers from this list. Both name
 and country are required, and manufacturer names must be unique. Saving returns
 to the list; editing a manufacturer preserves its links to existing projects.
+Unused manufacturers can be deleted after confirmation. If a manufacturer is
+used by projects, the confirmation page lists those projects and blocks deletion.
+Submitting a deletion request for a manufacturer in use also preserves it and
+returns the explanation, including when a project was added after opening the page.
 Development takes place
 on the `develop` branch.
 

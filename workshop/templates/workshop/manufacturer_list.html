@@ -34,7 +34,10 @@
             <tr>
               <th scope="row">{{ manufacturer.name }}</th>
               <td>{{ manufacturer.country }}</td>
-              <td><a href="{% url 'workshop:manufacturer-update' manufacturer.pk %}" aria-label="Edit {{ manufacturer.name }}">Edit</a></td>
+              <td>
+                <a href="{% url 'workshop:manufacturer-update' manufacturer.pk %}" aria-label="Edit {{ manufacturer.name }}">Edit</a>
+                <a href="{% url 'workshop:manufacturer-delete' manufacturer.pk %}" aria-label="Delete {{ manufacturer.name }}">Delete</a>
+              </td>
             </tr>
           {% endfor %}
         </tbody>
