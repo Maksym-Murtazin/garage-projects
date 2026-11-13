@@ -62,6 +62,9 @@ Unused manufacturers can be deleted after confirmation. If a manufacturer is
 used by projects, the confirmation page lists those projects and blocks deletion.
 Submitting a deletion request for a manufacturer in use also preserves it and
 returns the explanation, including when a project was added after opening the page.
+The task category list is available to signed-in members, with search by name
+and alphabetical ordering. It shows 10 categories per page and preserves the
+search when switching pages.
 Development takes place
 on the `develop` branch.
 

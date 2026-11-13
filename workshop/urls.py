@@ -6,6 +6,7 @@ app_name = "workshop"
 
 urlpatterns = [
     path("", views.index, name="index"),
+    path("categories/", views.TaskCategoryListView.as_view(), name="category-list"),
     path("manufacturers/", views.ManufacturerListView.as_view(), name="manufacturer-list"),
     path("manufacturers/create/", views.ManufacturerCreateView.as_view(), name="manufacturer-create"),
     path("manufacturers/<int:pk>/edit/", views.ManufacturerUpdateView.as_view(), name="manufacturer-update"),

@@ -715,3 +715,49 @@ class ManufacturerDeleteTests(TestCase):
                 task.refresh_from_db()
                 self.assertEqual(project.manufacturer_id, self.manufacturer.pk)
                 self.assertEqual(task.project_id, project.pk)
+
+
+class TaskCategoryListTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.url = reverse("workshop:category-list")
+
+    def test_login_search_and_empty_states(self):
+        self.assertRedirects(
+            self.client.get(self.url), f"{reverse('login')}?next={self.url}",
+        )
+        self.client.force_login(self.member)
+        self.assertContains(self.client.get(self.url), "No task categories yet.")
+        category = TaskCategory.objects.create(name="Bodywork")
+        TaskCategory.objects.create(name="Suspension")
+        response = self.client.get(self.url, {"q": " BODY "})
+        self.assertEqual(list(response.context["categories"]), [category])
+        self.assertEqual(response.context["query"], "BODY")
+        self.assertContains(response, "1 category")
+        self.assertContains(
+            self.client.get(self.url, {"q": "missing"}),
+            "No categories match your search.",
+        )
+
+    def test_pagination_preserves_search_and_name_order(self):
+        TaskCategory.objects.bulk_create([
+            TaskCategory(name=f"Body & Paint {index:02}")
+            for index in reversed(range(11))
+        ])
+        TaskCategory.objects.create(name="Suspension")
+        self.client.force_login(self.member)
+        response = self.client.get(self.url, {"q": "Body & Paint"})
+        self.assertEqual(response.context["paginator"].count, 11)
+        self.assertEqual(
+            [category.name for category in response.context["categories"]],
+            [f"Body & Paint {index:02}" for index in range(10)],
+        )
+        self.assertContains(response, 'href="?q=Body+%26+Paint&amp;page=2"')
+        response = self.client.get(self.url, {"q": "Body & Paint", "page": 2})
+        self.assertEqual(
+            [category.name for category in response.context["categories"]],
+            ["Body & Paint 10"],
+        )

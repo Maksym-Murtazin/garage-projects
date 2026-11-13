@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Task categories | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Categories</p>
+    <h1>Task categories</h1>
+    <p class="muted">Types of work used to organize workshop tasks.</p>
+  </section>
+  <form class="search-form" method="get" role="search">
+    <div>
+      <label for="category-search">Search categories</label>
+      <input id="category-search" type="search" name="q" value="{{ query }}" placeholder="Category name">
+    </div>
+    <button type="submit">Search</button>
+    {% if query %}<a href="{% url 'workshop:category-list' %}">Clear search</a>{% endif %}
+  </form>
+  <p class="muted">{{ paginator.count }} categor{{ paginator.count|pluralize:"y,ies" }}{% if query %} matching “{{ query }}”{% endif %}</p>
+  {% if categories %}
+    <div class="table-container">
+      <table>
+        <caption class="visually-hidden">Workshop task categories</caption>
+        <thead>
+          <tr><th scope="col">Name</th></tr>
+        </thead>
+        <tbody>
+          {% for category in categories %}
+            <tr><th scope="row">{{ category.name }}</th></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="panel">
+      {% if query %}
+        <p>No categories match your search. Try another name.</p>
+      {% else %}
+        <p>No task categories yet.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% include "includes/pagination.html" %}
+{% endblock %}
