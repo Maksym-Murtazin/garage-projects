@@ -111,3 +111,67 @@ class MemberDetailTests(TestCase):
         for url in (project.get_absolute_url(), task.get_absolute_url()):
             with self.subTest(url=url):
                 self.assertContains(self.client.get(url), f'href="{self.url}"')
+
+
+class MemberCreateTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.url = reverse("members:member-create")
+        cls.data = {
+            "username": "newbuilder", "first_name": "Alex", "last_name": "Smith",
+            "employee_code": "GRG00002",
+            "password1": "Workshop-River-739!", "password2": "Workshop-River-739!",
+        }
+
+    def test_creation_requires_login_and_csrf(self):
+        from django.test import Client
+
+        for method in (self.client.get, self.client.post):
+            response = method(self.url)
+            self.assertRedirects(response, f"{reverse('login')}?next={self.url}")
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.member)
+        self.assertContains(client.get(self.url), 'name="csrfmiddlewaretoken"')
+        self.assertEqual(client.post(self.url, self.data).status_code, 403)
+        self.assertEqual(get_user_model().objects.count(), 1)
+        response = client.post(self.url, {
+            **self.data, "csrfmiddlewaretoken": client.cookies["csrftoken"].value,
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(get_user_model().objects.filter(username="newbuilder").exists())
+
+    def test_creation_hashes_password_and_keeps_ordinary_permissions_and_session(self):
+        self.client.force_login(self.member)
+        response = self.client.post(self.url, {
+            **self.data, "is_staff": "on", "is_superuser": "on", "is_active": "",
+        })
+        created = get_user_model().objects.get(username="newbuilder")
+        self.assertRedirects(
+            response, reverse("members:member-detail", args=[created.pk]),
+        )
+        self.assertEqual(created.get_full_name(), "Alex Smith")
+        self.assertEqual(created.employee_code, "GRG00002")
+        self.assertTrue(created.check_password(self.data["password1"]))
+        self.assertTrue(created.is_active)
+        self.assertFalse(created.is_staff)
+        self.assertFalse(created.is_superuser)
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.member.pk))
+
+    def test_invalid_account_data_is_not_saved(self):
+        self.client.force_login(self.member)
+        cases = [
+            ({"employee_code": "ABC00002"}, "employee_code"),
+            ({"employee_code": "GRG00001"}, "employee_code"),
+            ({"username": "mechanic"}, "username"),
+            ({"password2": "different-password"}, "password2"),
+            ({"password1": "123", "password2": "123"}, "password2"),
+        ]
+        for changes, field in cases:
+            with self.subTest(changes=changes):
+                response = self.client.post(self.url, {**self.data, **changes})
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(field, response.context["form"].errors)
+                self.assertEqual(get_user_model().objects.count(), 1)

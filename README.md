@@ -40,6 +40,11 @@ name, or employee code, with 10 results per page and search preserved in paginat
 Each member has a detail page with their workshop information, joined projects,
 and assigned tasks, including completed work. Member profiles are linked from
 the member list, project teams, and task detail pages.
+Signed-in members can create ordinary workshop accounts from the member list.
+The form requires a unique username, a valid unique employee code, and a password
+with confirmation; first and last names are optional. Django validates and hashes
+the password. New accounts have no staff or superuser privileges. After creation,
+the creator stays signed in and is redirected to the new member's profile.
 Development takes place
 on the `develop` branch.
 
