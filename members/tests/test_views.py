@@ -239,3 +239,75 @@ class MemberUpdateTests(TestCase):
         self.assertRedirects(
             response, reverse("members:member-detail", args=[self.member.pk]),
         )
+
+
+class MemberDeleteTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.viewer = get_user_model().objects.create_user(
+            username="viewer", employee_code="GRG00001",
+        )
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00002",
+        )
+        cls.url = reverse("members:member-delete", args=[cls.member.pk])
+
+    def test_confirmed_deletion_preserves_projects_tasks_and_other_members(self):
+        from django.test import Client
+        from workshop.models import CarProject, Manufacturer, Task, TaskCategory
+
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        project = CarProject.objects.create(
+            title="E30 restoration", manufacturer=manufacturer, model="E30", year=1990,
+        )
+        project.members.add(self.member, self.viewer)
+        category = TaskCategory.objects.create(name="Bodywork")
+        task = Task.objects.create(
+            title="Repair panels", project=project, category=category,
+            assignee=self.member, status=Task.Status.DONE,
+        )
+        other_task = Task.objects.create(
+            title="Paint doors", project=project, category=category, assignee=self.viewer,
+        )
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.viewer)
+        response = client.get(self.url)
+        self.assertContains(response, "mechanic")
+        self.assertTrue(get_user_model().objects.filter(pk=self.member.pk).exists())
+        self.assertEqual(client.post(self.url).status_code, 403)
+        self.assertEqual(client.delete(self.url).status_code, 403)
+        response = client.post(self.url, {
+            "csrfmiddlewaretoken": client.cookies["csrftoken"].value,
+        })
+        self.assertRedirects(response, reverse("members:member-list"))
+        self.assertFalse(get_user_model().objects.filter(pk=self.member.pk).exists())
+        project.refresh_from_db()
+        task.refresh_from_db()
+        other_task.refresh_from_db()
+        self.assertEqual(list(project.members.all()), [self.viewer])
+        self.assertIsNone(task.assignee)
+        self.assertEqual(task.status, Task.Status.DONE)
+        self.assertEqual(other_task.assignee, self.viewer)
+        self.assertTrue(TaskCategory.objects.filter(pk=category.pk).exists())
+        self.assertTrue(Manufacturer.objects.filter(pk=manufacturer.pk).exists())
+
+    def test_login_required_and_protected_accounts_cannot_be_deleted(self):
+        for method in (self.client.get, self.client.post):
+            self.assertRedirects(method(self.url), f"{reverse('login')}?next={self.url}")
+        staff = get_user_model().objects.create_user(
+            username="staff", employee_code="GRG00003", is_staff=True,
+        )
+        admin = get_user_model().objects.create_user(
+            username="admin", employee_code="GRG00004", is_superuser=True,
+        )
+        self.client.force_login(self.viewer)
+        for member in (self.viewer, staff, admin):
+            with self.subTest(member=member.username):
+                url = reverse("members:member-delete", args=[member.pk])
+                self.assertNotContains(
+                    self.client.get(reverse("members:member-detail", args=[member.pk])),
+                    f'href="{url}"',
+                )
+                self.assertEqual(self.client.get(url).status_code, 403)
+                self.assertEqual(self.client.post(url).status_code, 403)
+                self.assertTrue(get_user_model().objects.filter(pk=member.pk).exists())

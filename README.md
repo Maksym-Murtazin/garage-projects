@@ -48,6 +48,10 @@ the creator stays signed in and is redirected to the new member's profile.
 Signed-in members can edit a member's username, first name, last name, and
 employee code from their profile. This form preserves passwords, account status,
 and permissions, and returns to the edited profile after saving.
+Deleting a member requires confirmation and preserves projects and tasks.
+The member leaves all project teams, and their tasks become unassigned without
+changing status. Signed-in members cannot delete their own account, staff
+accounts, or superusers through the workshop site.
 Development takes place
 on the `develop` branch.
 

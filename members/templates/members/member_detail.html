@@ -7,6 +7,9 @@
     <a href="{% url 'members:member-list' %}">Back to members</a>
     <h1>{{ member.username }}</h1>
     <a class="button" href="{% url 'members:member-update' member.pk %}">Edit member</a>
+    {% if member.pk != user.pk and not member.is_staff and not member.is_superuser %}
+      <a class="button danger" href="{% url 'members:member-delete' member.pk %}">Delete member</a>
+    {% endif %}
   </section>
   <section class="panel">
     <h2>Member details</h2>
