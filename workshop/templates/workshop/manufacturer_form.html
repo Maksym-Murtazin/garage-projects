@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit manufacturer{% else %}Create manufacturer{% endif %} | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Manufacturers</p>
+    <h1>{% if object %}Edit manufacturer{% else %}Create manufacturer{% endif %}</h1>
+  </section>
+  <form method="post" class="panel edit-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class="form-field">
+        {{ field.label_tag }}
+        {{ field }}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="form-actions">
+      <button type="submit">{% if object %}Save changes{% else %}Create manufacturer{% endif %}</button>
+      <a href="{% url 'workshop:manufacturer-list' %}">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

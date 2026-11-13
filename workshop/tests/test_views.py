@@ -618,3 +618,54 @@ class ManufacturerListTests(TestCase):
             [manufacturer.name for manufacturer in response.context["manufacturers"]],
             ["Brand 10"],
         )
+
+
+class ManufacturerFormTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.create_url = reverse("workshop:manufacturer-create")
+        cls.update_url = reverse("workshop:manufacturer-update", args=[cls.manufacturer.pk])
+
+    def test_login_required_and_create_and_edit_preserve_project_links(self):
+        for url in (self.create_url, self.update_url):
+            for method in (self.client.get, self.client.post):
+                self.assertRedirects(method(url), f"{reverse('login')}?next={url}")
+        self.client.force_login(self.member)
+        self.assertContains(self.client.get(self.create_url), 'name="csrfmiddlewaretoken"')
+        response = self.client.post(self.create_url, {"name": "Toyota", "country": "Japan"})
+        self.assertRedirects(response, reverse("workshop:manufacturer-list"))
+        self.assertTrue(Manufacturer.objects.filter(name="Toyota", country="Japan").exists())
+        project = CarProject.objects.create(
+            title="E30 restoration", manufacturer=self.manufacturer, model="E30", year=1990,
+        )
+        response = self.client.get(self.update_url)
+        self.assertEqual(response.context["form"].initial["name"], "BMW")
+        response = self.client.post(self.update_url, {"name": "BMW Group", "country": "Germany"})
+        self.assertRedirects(response, reverse("workshop:manufacturer-list"))
+        project.refresh_from_db()
+        self.assertEqual(project.manufacturer_id, self.manufacturer.pk)
+        self.assertEqual(project.manufacturer.name, "BMW Group")
+        self.assertEqual(Manufacturer.objects.count(), 2)
+
+    def test_required_fields_and_duplicate_names_are_rejected(self):
+        other = Manufacturer.objects.create(name="Toyota", country="Japan")
+        self.client.force_login(self.member)
+        for url in (self.create_url, self.update_url):
+            for data, field in (
+                ({"name": " ", "country": "Germany"}, "name"),
+                ({"name": "New brand", "country": " "}, "country"),
+                ({"name": other.name, "country": "Germany"}, "name"),
+            ):
+                with self.subTest(url=url, field=field):
+                    response = self.client.post(url, data)
+                    self.assertEqual(response.status_code, 200)
+                    self.assertIn(field, response.context["form"].errors)
+                    self.assertEqual(Manufacturer.objects.count(), 2)
+                    self.manufacturer.refresh_from_db()
+                    self.assertEqual(self.manufacturer.name, "BMW")
+        response = self.client.post(self.update_url, {"name": "BMW", "country": "Germany"})
+        self.assertRedirects(response, reverse("workshop:manufacturer-list"))

@@ -55,6 +55,9 @@ accounts, or superusers through the workshop site.
 The manufacturer list is available to signed-in members and supports searching
 by name or country. Results are sorted by name with 10 manufacturers per page,
 and pagination preserves the search.
+Signed-in members can create and edit manufacturers from this list. Both name
+and country are required, and manufacturer names must be unique. Saving returns
+to the list; editing a manufacturer preserves its links to existing projects.
 Development takes place
 on the `develop` branch.
 

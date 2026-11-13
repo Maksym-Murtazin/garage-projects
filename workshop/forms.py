@@ -1,6 +1,12 @@
 from django import forms
 
-from .models import CarProject, Task
+from .models import CarProject, Manufacturer, Task
+
+
+class ManufacturerForm(forms.ModelForm):
+    class Meta:
+        model = Manufacturer
+        fields = ("name", "country")
 
 
 class CarProjectForm(forms.ModelForm):

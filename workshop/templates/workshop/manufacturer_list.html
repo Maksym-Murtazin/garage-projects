@@ -7,6 +7,7 @@
     <p class="eyebrow">Workshop / Manufacturers</p>
     <h1>Manufacturers</h1>
     <p class="muted">Car manufacturers available for workshop projects.</p>
+    <a class="button" href="{% url 'workshop:manufacturer-create' %}">Create manufacturer</a>
   </section>
   <form class="search-form" method="get" role="search">
     <div>
@@ -25,6 +26,7 @@
           <tr>
             <th scope="col">Name</th>
             <th scope="col">Country</th>
+            <th scope="col">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -32,6 +34,7 @@
             <tr>
               <th scope="row">{{ manufacturer.name }}</th>
               <td>{{ manufacturer.country }}</td>
+              <td><a href="{% url 'workshop:manufacturer-update' manufacturer.pk %}" aria-label="Edit {{ manufacturer.name }}">Edit</a></td>
             </tr>
           {% endfor %}
         </tbody>
