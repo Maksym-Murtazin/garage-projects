@@ -810,3 +810,53 @@ class TaskCategoryFormTests(TestCase):
                     self.assertEqual(self.category.name, "Bodywork")
         response = self.client.post(self.update_url, {"name": "Bodywork"})
         self.assertRedirects(response, reverse("workshop:category-list"))
+
+
+class TaskCategoryDeleteTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.category = TaskCategory.objects.create(name="Bodywork")
+        cls.url = reverse("workshop:category-delete", args=[cls.category.pk])
+
+    def test_deletion_requires_login_confirmation_and_csrf(self):
+        for method in (self.client.get, self.client.post):
+            self.assertRedirects(method(self.url), f"{reverse('login')}?next={self.url}")
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.member)
+        self.assertContains(client.get(self.url), "Bodywork")
+        self.assertTrue(TaskCategory.objects.filter(pk=self.category.pk).exists())
+        self.assertEqual(client.post(self.url).status_code, 403)
+        token = client.cookies["csrftoken"].value
+        self.assertEqual(client.delete(self.url, HTTP_X_CSRFTOKEN=token).status_code, 405)
+        other = TaskCategory.objects.create(name="Suspension")
+        response = client.post(self.url, {"csrfmiddlewaretoken": token})
+        self.assertRedirects(response, reverse("workshop:category-list"))
+        self.assertFalse(TaskCategory.objects.filter(pk=self.category.pk).exists())
+        self.assertTrue(TaskCategory.objects.filter(pk=other.pk).exists())
+
+    def test_used_category_is_protected_even_after_confirmation_page_was_opened(self):
+        self.client.force_login(self.member)
+        self.assertContains(self.client.get(self.url), '<button class="danger"')
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        project = CarProject.objects.create(
+            title="E30 restoration", manufacturer=manufacturer, model="E30", year=1990,
+        )
+        task = Task.objects.create(
+            title="Repair panels", project=project, category=self.category,
+            status=Task.Status.DONE,
+        )
+        for method, status in ((self.client.get, 200), (self.client.post, 409)):
+            with self.subTest(method=method.__name__):
+                response = method(self.url)
+                self.assertContains(response, "cannot be deleted", status_code=status)
+                self.assertContains(response, task.get_absolute_url(), status_code=status)
+                self.assertContains(response, project.title, status_code=status)
+                self.assertNotContains(response, '<button class="danger"', status_code=status)
+                self.assertTrue(TaskCategory.objects.filter(pk=self.category.pk).exists())
+                task.refresh_from_db()
+                self.assertEqual(task.category_id, self.category.pk)
+                self.assertEqual(task.status, Task.Status.DONE)
+                self.assertTrue(CarProject.objects.filter(pk=project.pk).exists())

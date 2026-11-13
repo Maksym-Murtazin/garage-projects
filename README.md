@@ -68,6 +68,9 @@ search when switching pages.
 Signed-in members can create and edit task categories from this list. Names are
 required and must be unique. Saving returns to the list, and renaming a category
 preserves its links to existing tasks.
+Unused categories can be deleted after confirmation. Categories used by tasks,
+including completed tasks, cannot be deleted. The page lists the related tasks
+and their projects; direct deletion requests are also blocked.
 Development takes place
 on the `develop` branch.
 

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Delete category | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Categories</p>
+    <h1>Delete category</h1>
+  </section>
+  <section class="panel edit-form">
+    {% if tasks %}
+      <p><strong>{{ category.name }}</strong> cannot be deleted because it is used in these tasks:</p>
+      <ul>
+        {% for task in tasks %}
+          <li><a href="{{ task.get_absolute_url }}">{{ task.title }}</a> — {{ task.project.title }}</li>
+        {% endfor %}
+      </ul>
+      <p>Update the tasks' category before trying again.</p>
+      <a href="{% url 'workshop:category-list' %}">Back to categories</a>
+    {% else %}
+      <p>Are you sure you want to delete <strong>{{ category.name }}</strong>?</p>
+      <p>This action cannot be undone.</p>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+          <button class="danger" type="submit">Delete category</button>
+          <a href="{% url 'workshop:category-list' %}">Cancel</a>
+        </div>
+      </form>
+    {% endif %}
+  </section>
+{% endblock %}

@@ -9,6 +9,7 @@ urlpatterns = [
     path("categories/", views.TaskCategoryListView.as_view(), name="category-list"),
     path("categories/create/", views.TaskCategoryCreateView.as_view(), name="category-create"),
     path("categories/<int:pk>/edit/", views.TaskCategoryUpdateView.as_view(), name="category-update"),
+    path("categories/<int:pk>/delete/", views.TaskCategoryDeleteView.as_view(), name="category-delete"),
     path("manufacturers/", views.ManufacturerListView.as_view(), name="manufacturer-list"),
     path("manufacturers/create/", views.ManufacturerCreateView.as_view(), name="manufacturer-create"),
     path("manufacturers/<int:pk>/edit/", views.ManufacturerUpdateView.as_view(), name="manufacturer-update"),

@@ -32,7 +32,10 @@
           {% for category in categories %}
             <tr>
               <th scope="row">{{ category.name }}</th>
-              <td><a href="{% url 'workshop:category-update' category.pk %}" aria-label="Edit {{ category.name }}">Edit</a></td>
+              <td>
+                <a href="{% url 'workshop:category-update' category.pk %}" aria-label="Edit {{ category.name }}">Edit</a>
+                <a href="{% url 'workshop:category-delete' category.pk %}" aria-label="Delete {{ category.name }}">Delete</a>
+              </td>
             </tr>
           {% endfor %}
         </tbody>

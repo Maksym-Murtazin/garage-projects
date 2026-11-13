@@ -62,6 +62,25 @@ class TaskCategoryUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy("workshop:category-list")
 
 
+class TaskCategoryDeleteView(LoginRequiredMixin, DeleteView):
+    model = TaskCategory
+    template_name = "workshop/taskcategory_confirm_delete.html"
+    context_object_name = "category"
+    success_url = reverse_lazy("workshop:category-list")
+    http_method_names = ["get", "post", "head", "options"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tasks"] = self.object.tasks.select_related("project")
+        return context
+
+    def form_valid(self, form):
+        try:
+            return super().form_valid(form)
+        except ProtectedError:
+            return self.render_to_response(self.get_context_data(form=form), status=409)
+
+
 class ManufacturerListView(LoginRequiredMixin, ListView):
     model = Manufacturer
     template_name = "workshop/manufacturer_list.html"
