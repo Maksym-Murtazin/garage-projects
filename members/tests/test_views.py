@@ -175,3 +175,67 @@ class MemberCreateTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(field, response.context["form"].errors)
                 self.assertEqual(get_user_model().objects.count(), 1)
+
+
+class MemberUpdateTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.viewer = get_user_model().objects.create_user(
+            username="viewer", employee_code="GRG00001",
+        )
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00002", password="Original-739!",
+        )
+        cls.url = reverse("members:member-update", args=[cls.member.pk])
+        cls.data = {
+            "username": "builder", "first_name": "Alex", "last_name": "Smith",
+            "employee_code": "GRG00003",
+        }
+
+    def test_edit_requires_login_and_updates_only_profile_fields(self):
+        for method in (self.client.get, self.client.post):
+            self.assertRedirects(
+                method(self.url),
+                f"{reverse('login')}?next={self.url}",
+            )
+        self.client.force_login(self.viewer)
+        response = self.client.get(self.url)
+        self.assertEqual(response.context["form"].initial["username"], "mechanic")
+        self.assertEqual(set(response.context["form"].fields), set(self.data))
+        original_password = self.member.password
+        response = self.client.post(self.url, {
+            **self.data, "password": "replacement", "is_staff": "on",
+            "is_superuser": "on", "is_active": "",
+        })
+        self.assertRedirects(
+            response, reverse("members:member-detail", args=[self.member.pk]),
+        )
+        self.member.refresh_from_db()
+        for field, value in self.data.items():
+            self.assertEqual(getattr(self.member, field), value)
+        self.assertEqual(self.member.password, original_password)
+        self.assertFalse(self.member.is_staff)
+        self.assertFalse(self.member.is_superuser)
+        self.assertTrue(self.member.is_active)
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.viewer.pk))
+
+    def test_edit_validates_code_and_uniqueness_without_rejecting_unchanged_values(self):
+        self.client.force_login(self.viewer)
+        for changes, field in (
+            ({"employee_code": "invalid"}, "employee_code"),
+            ({"employee_code": self.viewer.employee_code}, "employee_code"),
+            ({"username": self.viewer.username}, "username"),
+        ):
+            with self.subTest(changes=changes):
+                response = self.client.post(self.url, {**self.data, **changes})
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(field, response.context["form"].errors)
+                self.member.refresh_from_db()
+                self.assertEqual(self.member.username, "mechanic")
+                self.assertEqual(self.member.employee_code, "GRG00002")
+        response = self.client.post(self.url, {
+            **self.data, "username": "mechanic", "employee_code": "GRG00002",
+        })
+        self.assertRedirects(
+            response, reverse("members:member-detail", args=[self.member.pk]),
+        )

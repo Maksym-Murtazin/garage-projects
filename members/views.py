@@ -2,9 +2,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.urls import reverse
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from .forms import MemberCreationForm
+from .forms import MemberCreationForm, MemberUpdateForm
 
 
 class MemberListView(LoginRequiredMixin, ListView):
@@ -46,6 +46,15 @@ class MemberDetailView(LoginRequiredMixin, DetailView):
 class MemberCreateView(LoginRequiredMixin, CreateView):
     model = get_user_model()
     form_class = MemberCreationForm
+    template_name = "members/member_form.html"
+
+    def get_success_url(self):
+        return reverse("members:member-detail", kwargs={"pk": self.object.pk})
+
+
+class MemberUpdateView(LoginRequiredMixin, UpdateView):
+    model = get_user_model()
+    form_class = MemberUpdateForm
     template_name = "members/member_form.html"
 
     def get_success_url(self):

@@ -45,6 +45,9 @@ The form requires a unique username, a valid unique employee code, and a passwor
 with confirmation; first and last names are optional. Django validates and hashes
 the password. New accounts have no staff or superuser privileges. After creation,
 the creator stays signed in and is redirected to the new member's profile.
+Signed-in members can edit a member's username, first name, last name, and
+employee code from their profile. This form preserves passwords, account status,
+and permissions, and returns to the edited profile after saving.
 Development takes place
 on the `develop` branch.
 

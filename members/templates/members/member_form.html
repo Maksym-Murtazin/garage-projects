@@ -1,12 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Create member | Garage Projects{% endblock %}
+{% block title %}{% if object %}Edit member{% else %}Create member{% endif %} | Garage Projects{% endblock %}
 
 {% block content %}
   <section class="page-heading">
     <p class="eyebrow">Workshop / Members</p>
-    <h1>Create member</h1>
-    <p class="muted">Add a workshop member with access to the shared workspace.</p>
+    <h1>{% if object %}Edit member{% else %}Create member{% endif %}</h1>
+    {% if object %}
+      <p class="muted">Update the member's username, name, and employee code.</p>
+    {% else %}
+      <p class="muted">Add a workshop member with access to the shared workspace.</p>
+    {% endif %}
   </section>
   <form method="post" class="panel edit-form">
     {% csrf_token %}
@@ -20,8 +24,12 @@
       </div>
     {% endfor %}
     <div class="form-actions">
-      <button type="submit">Create member</button>
-      <a href="{% url 'members:member-list' %}">Cancel</a>
+      <button type="submit">{% if object %}Save changes{% else %}Create member{% endif %}</button>
+      {% if object %}
+        <a href="{% url 'members:member-detail' object.pk %}">Cancel</a>
+      {% else %}
+        <a href="{% url 'members:member-list' %}">Cancel</a>
+      {% endif %}
     </div>
   </form>
 {% endblock %}
