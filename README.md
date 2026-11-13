@@ -52,6 +52,9 @@ Deleting a member requires confirmation and preserves projects and tasks.
 The member leaves all project teams, and their tasks become unassigned without
 changing status. Signed-in members cannot delete their own account, staff
 accounts, or superusers through the workshop site.
+The manufacturer list is available to signed-in members and supports searching
+by name or country. Results are sorted by name with 10 manufacturers per page,
+and pagination preserves the search.
 Development takes place
 on the `develop` branch.
 

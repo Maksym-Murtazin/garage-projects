@@ -9,7 +9,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from django.views.decorators.http import require_POST
 
 from .forms import CarProjectForm, TaskFilterForm, TaskForm
-from .models import CarProject, Task
+from .models import CarProject, Manufacturer, Task
 
 
 @login_required
@@ -26,6 +26,25 @@ def index(request):
         "num_visits": visits,
     }
     return render(request, "workshop/index.html", context)
+
+
+class ManufacturerListView(LoginRequiredMixin, ListView):
+    model = Manufacturer
+    template_name = "workshop/manufacturer_list.html"
+    context_object_name = "manufacturers"
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            queryset = queryset.filter(Q(name__icontains=query) | Q(country__icontains=query))
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["query"] = self.request.GET.get("q", "").strip()
+        return context
 
 
 class CarProjectListView(LoginRequiredMixin, ListView):

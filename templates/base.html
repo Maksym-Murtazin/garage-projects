@@ -16,6 +16,7 @@
           <a href="{% url 'workshop:project-list' %}">Projects</a>
           <a href="{% url 'workshop:task-list' %}">Tasks</a>
           <a href="{% url 'members:member-list' %}">Members</a>
+          <a href="{% url 'workshop:manufacturer-list' %}">Manufacturers</a>
           <span>{{ user.username }}</span>
           {% if user.is_staff %}<a href="{% url 'admin:index' %}">Administration</a>{% endif %}
           <form method="post" action="{% url 'logout' %}">

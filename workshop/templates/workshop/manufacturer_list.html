@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Manufacturers | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Manufacturers</p>
+    <h1>Manufacturers</h1>
+    <p class="muted">Car manufacturers available for workshop projects.</p>
+  </section>
+  <form class="search-form" method="get" role="search">
+    <div>
+      <label for="manufacturer-search">Search manufacturers</label>
+      <input id="manufacturer-search" type="search" name="q" value="{{ query }}" placeholder="Name or country">
+    </div>
+    <button type="submit">Search</button>
+    {% if query %}<a href="{% url 'workshop:manufacturer-list' %}">Clear search</a>{% endif %}
+  </form>
+  <p class="muted">{{ paginator.count }} manufacturer{{ paginator.count|pluralize }}{% if query %} matching “{{ query }}”{% endif %}</p>
+  {% if manufacturers %}
+    <div class="table-container">
+      <table>
+        <caption class="visually-hidden">Car manufacturers</caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Country</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for manufacturer in manufacturers %}
+            <tr>
+              <th scope="row">{{ manufacturer.name }}</th>
+              <td>{{ manufacturer.country }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="panel">
+      {% if query %}
+        <p>No manufacturers match your search. Try another name or country.</p>
+      {% else %}
+        <p>No manufacturers yet.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% include "includes/pagination.html" %}
+{% endblock %}

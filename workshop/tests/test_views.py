@@ -570,3 +570,51 @@ class TaskDeleteTests(TestCase):
         self.assertTrue(TaskCategory.objects.filter(pk=self.category.pk).exists())
         self.assertTrue(self.project.members.filter(pk=self.member.pk).exists())
         self.assertEqual(client.get(url).status_code, 404)
+
+
+class ManufacturerListTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.url = reverse("workshop:manufacturer-list")
+
+    def test_login_search_and_empty_states(self):
+        self.assertRedirects(
+            self.client.get(self.url), f"{reverse('login')}?next={self.url}",
+        )
+        self.client.force_login(self.member)
+        self.assertContains(self.client.get(self.url), "No manufacturers yet.")
+        bmw = Manufacturer.objects.create(name="BMW", country="Germany")
+        Manufacturer.objects.create(name="Toyota", country="Japan")
+        for query in (" bMw ", "germany"):
+            with self.subTest(query=query):
+                response = self.client.get(self.url, {"q": query})
+                self.assertEqual(list(response.context["manufacturers"]), [bmw])
+                self.assertEqual(response.context["query"], query.strip())
+                self.assertContains(response, "Germany")
+        self.assertContains(
+            self.client.get(self.url, {"q": "missing"}),
+            "No manufacturers match your search.",
+        )
+
+    def test_pagination_keeps_search_and_alphabetical_order(self):
+        Manufacturer.objects.bulk_create([
+            Manufacturer(name=f"Brand {index:02}", country="Trinidad & Tobago")
+            for index in reversed(range(11))
+        ])
+        Manufacturer.objects.create(name="Other", country="Germany")
+        self.client.force_login(self.member)
+        response = self.client.get(self.url, {"q": "Trinidad & Tobago"})
+        self.assertEqual(response.context["paginator"].count, 11)
+        self.assertEqual(
+            [manufacturer.name for manufacturer in response.context["manufacturers"]],
+            [f"Brand {index:02}" for index in range(10)],
+        )
+        self.assertContains(response, 'href="?q=Trinidad+%26+Tobago&amp;page=2"')
+        response = self.client.get(self.url, {"q": "Trinidad & Tobago", "page": 2})
+        self.assertEqual(
+            [manufacturer.name for manufacturer in response.context["manufacturers"]],
+            ["Brand 10"],
+        )
