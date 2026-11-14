@@ -29,6 +29,7 @@
             <th scope="col">Model</th>
             <th scope="col">Year</th>
             <th scope="col">Status</th>
+            <th scope="col">Task progress</th>
           </tr>
         </thead>
         <tbody>
@@ -39,6 +40,7 @@
               <td>{{ project.model }}</td>
               <td>{{ project.year }}</td>
               <td>{{ project.get_status_display }}</td>
+              <td>{% include "workshop/includes/project_progress.html" %}</td>
             </tr>
           {% endfor %}
         </tbody>

@@ -1,0 +1,8 @@
+{% if project.task_count %}
+  <div class="project-progress">
+    <progress value="{{ project.completed_task_count }}" max="{{ project.task_count }}" aria-label="Task completion for {{ project.title }}"></progress>
+    <span>{{ project.completed_task_count }} of {{ project.task_count }} tasks done ({% widthratio project.completed_task_count project.task_count 100 %}%)</span>
+  </div>
+{% else %}
+  <span class="muted">No tasks yet.</span>
+{% endif %}

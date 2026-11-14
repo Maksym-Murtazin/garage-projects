@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -140,7 +140,10 @@ class CarProjectListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related("manufacturer")
+        queryset = super().get_queryset().select_related("manufacturer").annotate(
+            task_count=Count("tasks"),
+            completed_task_count=Count("tasks", filter=Q(tasks__status=Task.Status.DONE)),
+        ).order_by("title", "pk")
         query = self.request.GET.get("q", "").strip()
         if query:
             queryset = queryset.filter(
@@ -160,7 +163,10 @@ class CarProjectDetailView(LoginRequiredMixin, DetailView):
     model = CarProject
     template_name = "workshop/carproject_detail.html"
     context_object_name = "project"
-    queryset = CarProject.objects.select_related("manufacturer").prefetch_related("members")
+    queryset = CarProject.objects.select_related("manufacturer").prefetch_related("members").annotate(
+        task_count=Count("tasks"),
+        completed_task_count=Count("tasks", filter=Q(tasks__status=Task.Status.DONE)),
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

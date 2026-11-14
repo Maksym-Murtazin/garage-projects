@@ -59,6 +59,8 @@ tbody tr:last-child > * { border-bottom: 0; }
 .project-facts dt { color: #57666e; }
 .project-facts dd { margin: 0; }
 .project-description { line-height: 1.6; }
+.project-progress { display: grid; gap: 8px; }
+.project-progress progress { width: 100%; max-width: 280px; height: 16px; accent-color: #26715d; }
 .team-list { padding-left: 20px; line-height: 1.8; }
 .project-tasks { margin: 32px 0; }
 .project-tasks > h2 { margin-bottom: 16px; }

@@ -860,3 +860,50 @@ class TaskCategoryDeleteTests(TestCase):
                 self.assertEqual(task.category_id, self.category.pk)
                 self.assertEqual(task.status, Task.Status.DONE)
                 self.assertTrue(CarProject.objects.filter(pk=project.pk).exists())
+
+
+class ProjectProgressTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.project = CarProject.objects.create(
+            title="E30 restoration", manufacturer=manufacturer, model="E30", year=1990,
+        )
+        cls.category = TaskCategory.objects.create(name="Bodywork")
+
+    def test_progress_counts_only_done_tasks_and_updates_without_changing_project_status(self):
+        self.client.force_login(self.member)
+        for status in Task.Status.values:
+            Task.objects.create(
+                title=status, project=self.project, category=self.category, status=status,
+            )
+        other = CarProject.objects.create(
+            title="Other build", manufacturer=self.project.manufacturer, model="E36", year=1995,
+        )
+        Task.objects.create(
+            title="Other task", project=other, category=self.category, status=Task.Status.DONE,
+        )
+        list_url = reverse("workshop:project-list")
+        for url in (list_url, self.project.get_absolute_url()):
+            self.assertContains(self.client.get(url), "1 of 3 tasks done (33%)")
+        self.project.tasks.update(status=Task.Status.DONE)
+        for url in (list_url, self.project.get_absolute_url()):
+            self.assertContains(self.client.get(url), "3 of 3 tasks done (100%)")
+        self.project.tasks.filter(title=Task.Status.TODO).delete()
+        self.assertContains(self.client.get(self.project.get_absolute_url()), "2 of 2 tasks done (100%)")
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.status, CarProject.Status.PLANNED)
+
+    def test_empty_project_and_zero_completed_tasks(self):
+        self.client.force_login(self.member)
+        urls = (reverse("workshop:project-list"), self.project.get_absolute_url())
+        for url in urls:
+            self.assertContains(self.client.get(url), "No tasks yet.")
+        Task.objects.create(title="Repair panels", project=self.project, category=self.category)
+        for url in urls:
+            response = self.client.get(url)
+            self.assertContains(response, "0 of 1 tasks done (0%)")
+            self.assertContains(response, '<progress value="0" max="1"')

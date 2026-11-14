@@ -19,6 +19,8 @@
         <dt>Year</dt><dd>{{ project.year }}</dd>
         <dt>Status</dt><dd>{{ project.get_status_display }}</dd>
       </dl>
+      <h2>Task progress</h2>
+      {% include "workshop/includes/project_progress.html" %}
       <h2>Description</h2>
       {% if project.description %}
         <div class="project-description">{{ project.description|linebreaks }}</div>

@@ -21,6 +21,10 @@ task, and active member counts, plus dashboard visits in the current session.
 The project list supports searching by title, manufacturer, or car model and
 shows 10 projects per page, keeping the search when switching pages. Each project
 has a detail page with vehicle information, a description, team members, and tasks.
+The project list and detail pages show task progress: completed tasks out of the
+total, a progress bar, and a rounded percentage. Projects without tasks display
+"No tasks yet." Progress reflects current task statuses; the project status is
+still set manually.
 Signed-in members can create, edit, and delete projects through the site.
 Deletion requires a confirmation page and removes the project's tasks as well.
 Members can join or leave a project from its detail page. Leaving unassigns all
