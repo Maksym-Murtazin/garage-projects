@@ -30,6 +30,10 @@ Deletion requires a confirmation page and removes the project's tasks as well.
 Members can join or leave a project from its detail page. Leaving unassigns all
 of that member's tasks in the project, including completed tasks, without changing
 their statuses. Team membership is managed separately from the project form.
+Signed-in members can use **Manage team** on a project to select its members or
+clear the team. Saving updates membership and unassigns removed members' tasks
+in one transaction, including completed tasks, without changing task statuses.
+Other projects and their assignments are preserved; invalid selections save nothing.
 The task list supports search by title, project, assignee username, or employee
 code, with status, priority, and project filters. Pagination preserves these
 parameters. Task titles link to detail pages with the full description, project,

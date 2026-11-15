@@ -9,7 +9,10 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.views.decorators.http import require_POST
 
-from .forms import CarProjectForm, ManufacturerForm, TaskCategoryForm, TaskFilterForm, TaskForm
+from .forms import (
+    CarProjectForm, ManufacturerForm, ProjectTeamForm,
+    TaskCategoryForm, TaskFilterForm, TaskForm,
+)
 from .models import CarProject, Manufacturer, Task, TaskCategory
 
 
@@ -193,6 +196,22 @@ class CarProjectDeleteView(LoginRequiredMixin, DeleteView):
     context_object_name = "project"
     success_url = reverse_lazy("workshop:project-list")
     http_method_names = ["get", "post", "head", "options"]
+
+
+class ProjectTeamUpdateView(LoginRequiredMixin, UpdateView):
+    model = CarProject
+    form_class = ProjectTeamForm
+    template_name = "workshop/project_team_form.html"
+    context_object_name = "project"
+    http_method_names = ["get", "post", "head", "options"]
+
+    def form_valid(self, form):
+        with transaction.atomic():
+            removed_members = self.object.members.exclude(
+                pk__in=form.cleaned_data["members"],
+            )
+            self.object.tasks.filter(assignee__in=removed_members).update(assignee=None)
+            return super().form_valid(form)
 
 
 @login_required

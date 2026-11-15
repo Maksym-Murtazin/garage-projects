@@ -23,6 +23,14 @@ class CarProjectForm(forms.ModelForm):
         widgets = {"description": forms.Textarea(attrs={"rows": 5})}
 
 
+class ProjectTeamForm(forms.ModelForm):
+    class Meta:
+        model = CarProject
+        fields = ("members",)
+        labels = {"members": "Team members"}
+        widgets = {"members": forms.CheckboxSelectMultiple}
+
+
 class TaskFilterForm(forms.Form):
     q = forms.CharField(label="Search tasks", required=False)
     status = forms.ChoiceField(

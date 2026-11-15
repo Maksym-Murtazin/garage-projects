@@ -30,6 +30,7 @@
     </section>
     <section class="panel">
       <h2>Project team</h2>
+      <p><a href="{% url 'workshop:project-team' project.pk %}">Manage team</a></p>
       <ul class="team-list">
         {% for member in project.members.all %}
           <li><a href="{% url 'members:member-detail' member.pk %}">{{ member }}</a> <span class="muted">· {{ member.employee_code }}</span></li>

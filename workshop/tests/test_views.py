@@ -347,6 +347,115 @@ class ProjectMembershipTests(TestCase):
         self.assertFalse(self.project.members.exists())
 
 
+class ProjectTeamTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = get_user_model().objects.create_user(
+            username="mechanic", employee_code="GRG00001",
+        )
+        cls.colleague = get_user_model().objects.create_user(
+            username="painter", employee_code="GRG00002",
+        )
+        cls.new_member = get_user_model().objects.create_user(
+            username="electrician", employee_code="GRG00003",
+        )
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        cls.project = CarProject.objects.create(
+            title="Restoration", manufacturer=manufacturer, model="320i", year=1989,
+        )
+        cls.other_project = CarProject.objects.create(
+            title="Track build", manufacturer=manufacturer, model="M3", year=2004,
+        )
+        cls.project.members.add(cls.member, cls.colleague)
+        cls.other_project.members.add(cls.colleague)
+        category = TaskCategory.objects.create(name="Suspension")
+        cls.removed_tasks = [
+            Task.objects.create(
+                title=status, status=status, project=cls.project,
+                category=category, assignee=cls.colleague,
+            )
+            for status in Task.Status.values
+        ]
+        cls.retained_task = Task.objects.create(
+            title="Inspect suspension", project=cls.project,
+            category=category, assignee=cls.member,
+        )
+        cls.other_task = Task.objects.create(
+            title="Track suspension", project=cls.other_project,
+            category=category, assignee=cls.colleague,
+        )
+        cls.url = reverse("workshop:project-team", args=[cls.project.pk])
+
+    def test_form_requires_login_and_csrf_and_preselects_current_team(self):
+        for method in (self.client.get, self.client.post):
+            self.assertRedirects(method(self.url), reverse("login") + "?next=" + self.url)
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.new_member)
+        self.assertContains(client.get(self.project.get_absolute_url()), self.url)
+        response = client.get(self.url)
+        self.assertCountEqual(
+            response.context["form"]["members"].value(),
+            [self.member.pk, self.colleague.pk],
+        )
+        self.assertContains(response, 'name="csrfmiddlewaretoken"')
+        self.assertEqual(client.post(self.url).status_code, 403)
+        self.assertCountEqual(self.project.members.all(), [self.member, self.colleague])
+        self.assertEqual(
+            client.get(reverse("workshop:project-team", args=[0])).status_code, 404,
+        )
+        self.assertRedirects(client.post(self.url, {
+            "members": [self.member.pk, self.colleague.pk],
+            "csrfmiddlewaretoken": client.cookies["csrftoken"].value,
+        }), self.project.get_absolute_url())
+        for task in self.removed_tasks:
+            task.refresh_from_db()
+            self.assertEqual(task.assignee, self.colleague)
+
+    def test_team_changes_unassign_removed_members_only_and_allow_empty_team(self):
+        self.client.force_login(self.new_member)
+        response = self.client.post(self.url, {
+            "members": [self.member.pk, self.new_member.pk],
+            "title": "Unwanted edit", "status": CarProject.Status.COMPLETED,
+        })
+        self.assertRedirects(response, self.project.get_absolute_url())
+        self.assertCountEqual(self.project.members.all(), [self.member, self.new_member])
+        for task in self.removed_tasks:
+            status = task.status
+            task.refresh_from_db()
+            self.assertIsNone(task.assignee)
+            self.assertEqual(task.status, status)
+        self.retained_task.refresh_from_db()
+        self.assertEqual(self.retained_task.assignee, self.member)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title, "Restoration")
+        self.assertEqual(self.project.status, CarProject.Status.PLANNED)
+
+        self.assertRedirects(self.client.post(self.url, {}), self.project.get_absolute_url())
+        self.assertFalse(self.project.members.exists())
+        self.retained_task.refresh_from_db()
+        self.assertIsNone(self.retained_task.assignee)
+        self.assertEqual(self.retained_task.status, Task.Status.TODO)
+        self.other_task.refresh_from_db()
+        self.assertEqual(self.other_task.assignee, self.colleague)
+        self.assertEqual(self.other_task.status, Task.Status.TODO)
+        self.assertQuerySetEqual(self.other_project.members.all(), [self.colleague])
+        self.assertEqual(Task.objects.count(), 5)
+
+    def test_invalid_selection_preserves_team_and_assignments(self):
+        self.client.force_login(self.member)
+        for invalid_member in (0, "invalid"):
+            with self.subTest(member=invalid_member):
+                response = self.client.post(self.url, {
+                    "members": [self.new_member.pk, invalid_member],
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("members", response.context["form"].errors)
+                self.assertCountEqual(self.project.members.all(), [self.member, self.colleague])
+                for task in self.removed_tasks:
+                    task.refresh_from_db()
+                    self.assertEqual(task.assignee, self.colleague)
+
+
 class TaskListTests(TestCase):
     def test_list_requires_login(self):
         url = reverse("workshop:task-list")
