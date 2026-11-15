@@ -120,6 +120,32 @@ through the admin site. Ordinary active members can access the dashboard without
 staff permissions. Use **Sign out** to end the session.
 Stop the server with `Ctrl+C`.
 
+### Demo workshop
+
+After `migrate`, optionally load fictional workshop data into an empty database
+before creating any accounts:
+
+```powershell
+.\.venv\Scripts\python.exe manage.py seed_demo
+```
+
+On Linux/macOS, use `.venv/bin/python manage.py seed_demo`.
+The command creates 4 members, 3 manufacturers, 5 categories, 5 car projects,
+and 12 tasks. Examples include restoration and track preparation, all project
+and task statuses, different priorities, unassigned tasks, optional due dates,
+and a project without a team or tasks. Dates are relative to the first run.
+
+Sign in as `demo` using the randomly generated password printed by the command.
+Save it locally: it is shown only once. This is an ordinary account without
+admin privileges. The other fictional members cannot sign in until a password
+is set. To reset the demo password, use `manage.py changepassword demo` with
+your virtual environment's Python.
+
+If any workshop records or accounts already exist, the command leaves the
+database unchanged. Re-running it does not duplicate data, reset passwords,
+or overwrite edits. Loading is atomic: a failure leaves no partial demo data.
+Use a separate empty local database if you already have data to keep.
+
 ### Database setup
 
 The initial migration creates the custom `Member` model. Each member has a
