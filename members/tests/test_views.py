@@ -28,7 +28,7 @@ class MemberListTests(TestCase):
         response = self.client.get(self.url)
         self.assertContains(response, "Inactive")
         response = self.client.get(self.url, {"q": "missing"})
-        self.assertContains(response, "No members match your search.")
+        self.assertContains(response, "No members match the current filters.")
 
     def test_pagination_preserves_search_and_excludes_unmatched_members(self):
         get_user_model().objects.bulk_create([

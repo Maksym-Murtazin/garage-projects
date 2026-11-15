@@ -9,26 +9,26 @@
     <p class="muted">Welcome, {{ user.first_name|default:user.username }}. Here is where the workshop stands.</p>
   </section>
   <section class="statistics" aria-label="Workshop statistics">
-    <article class="panel">
+    <a class="panel statistic-link" href="{% url 'workshop:project-list' %}">
       <h2>Total projects</h2>
       <p class="stat-value">{{ project_count }}</p>
       <p class="muted">All builds and restorations</p>
-    </article>
-    <article class="panel">
+    </a>
+    <a class="panel statistic-link" href="{% url 'workshop:project-list' %}?status=in_progress">
       <h2>Projects in progress</h2>
       <p class="stat-value">{{ active_project_count }}</p>
       <p class="muted">Work currently underway</p>
-    </article>
-    <article class="panel">
+    </a>
+    <a class="panel statistic-link" href="{% url 'workshop:task-list' %}?status=open">
       <h2>Open tasks</h2>
       <p class="stat-value">{{ open_task_count }}</p>
       <p class="muted">To do and in progress</p>
-    </article>
-    <article class="panel">
+    </a>
+    <a class="panel statistic-link" href="{% url 'members:member-list' %}?status=active">
       <h2>Active members</h2>
       <p class="stat-value">{{ member_count }}</p>
       <p class="muted">Enabled workshop accounts</p>
-    </article>
+    </a>
   </section>
   <p class="muted session-note">Dashboard visits in this session: {{ num_visits }}</p>
 {% endblock %}

@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from .forms import MemberCreationForm, MemberUpdateForm
+from .forms import MemberCreationForm, MemberStatusForm, MemberUpdateForm
 
 
 class MemberListView(LoginRequiredMixin, ListView):
@@ -16,6 +16,12 @@ class MemberListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        self.status_form = MemberStatusForm(self.request.GET)
+        if not self.status_form.is_valid():
+            return queryset.none()
+        status = self.status_form.cleaned_data["status"]
+        if status:
+            queryset = queryset.filter(is_active=status == "active")
         query = self.request.GET.get("q", "").strip()
         if query:
             queryset = queryset.filter(
@@ -29,6 +35,7 @@ class MemberListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["query"] = self.request.GET.get("q", "").strip()
+        context["status_form"] = self.status_form
         return context
 
 

@@ -10,7 +10,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from django.views.decorators.http import require_POST
 
 from .forms import (
-    CarProjectForm, ManufacturerForm, ProjectTeamForm,
+    CarProjectForm, ManufacturerForm, ProjectStatusForm, ProjectTeamForm,
     TaskCategoryForm, TaskFilterForm, TaskForm,
 )
 from .models import CarProject, Manufacturer, Task, TaskCategory
@@ -147,6 +147,11 @@ class CarProjectListView(LoginRequiredMixin, ListView):
             task_count=Count("tasks"),
             completed_task_count=Count("tasks", filter=Q(tasks__status=Task.Status.DONE)),
         ).order_by("title", "pk")
+        self.status_form = ProjectStatusForm(self.request.GET)
+        if not self.status_form.is_valid():
+            return queryset.none()
+        if self.status_form.cleaned_data["status"]:
+            queryset = queryset.filter(status=self.status_form.cleaned_data["status"])
         query = self.request.GET.get("q", "").strip()
         if query:
             queryset = queryset.filter(
@@ -159,6 +164,7 @@ class CarProjectListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["query"] = self.request.GET.get("q", "").strip()
+        context["status_form"] = self.status_form
         return context
 
 
@@ -252,7 +258,11 @@ class TaskListView(LoginRequiredMixin, ListView):
                 | Q(assignee__username__icontains=query)
                 | Q(assignee__employee_code__icontains=query)
             )
-        for field in ("status", "priority", "project"):
+        if filters["status"] == "open":
+            queryset = queryset.exclude(status=Task.Status.DONE)
+        elif filters["status"]:
+            queryset = queryset.filter(status=filters["status"])
+        for field in ("priority", "project"):
             if filters[field]:
                 queryset = queryset.filter(**{field: filters[field]})
         return queryset

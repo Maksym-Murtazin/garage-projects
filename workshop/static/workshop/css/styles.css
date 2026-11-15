@@ -21,6 +21,9 @@ h2 { font-size: 1rem; margin: 0; }
 .muted { color: #57666e; line-height: 1.6; }
 .statistics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
 .panel { background: #fff; border: 1px solid #dce3e4; border-radius: 12px; padding: 24px; }
+.statistic-link { color: inherit; text-decoration: none; }
+.statistic-link:hover { border-color: #17695e; background: #eef5f2; }
+.statistic-link:hover h2, .statistic-link:focus-visible h2 { text-decoration: underline; }
 .stat-value { font-size: 3rem; font-weight: 750; margin: 18px 0; color: #17695e; }
 .panel .muted { margin-bottom: 0; }
 .session-note { margin-top: 28px; font-size: .875rem; }

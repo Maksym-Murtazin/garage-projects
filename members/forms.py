@@ -14,3 +14,10 @@ class MemberUpdateForm(forms.ModelForm):
         model = get_user_model()
         fields = ("username", "first_name", "last_name", "employee_code")
         field_classes = {"username": UsernameField}
+
+
+class MemberStatusForm(forms.Form):
+    status = forms.ChoiceField(
+        choices=[("", "All accounts"), ("active", "Active"), ("inactive", "Inactive")],
+        required=False,
+    )

@@ -31,10 +31,16 @@ class ProjectTeamForm(forms.ModelForm):
         widgets = {"members": forms.CheckboxSelectMultiple}
 
 
+class ProjectStatusForm(forms.Form):
+    status = forms.ChoiceField(
+        choices=[("", "All statuses"), *CarProject.Status.choices], required=False,
+    )
+
+
 class TaskFilterForm(forms.Form):
     q = forms.CharField(label="Search tasks", required=False)
     status = forms.ChoiceField(
-        choices=[("", "All statuses"), *Task.Status.choices], required=False,
+        choices=[("", "All statuses"), ("open", "Open tasks"), *Task.Status.choices], required=False,
     )
     priority = forms.ChoiceField(
         choices=[("", "All priorities"), *Task.Priority.choices], required=False,

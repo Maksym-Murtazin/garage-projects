@@ -14,8 +14,13 @@
       <label for="project-search">Search projects</label>
       <input id="project-search" type="search" name="q" value="{{ query }}" placeholder="Title, manufacturer, or car model">
     </div>
-    <button type="submit">Search</button>
-    {% if query %}<a href="{% url 'workshop:project-list' %}">Clear search</a>{% endif %}
+    <div>
+      {{ status_form.status.label_tag }}
+      {{ status_form.status }}
+      {{ status_form.status.errors }}
+    </div>
+    <button type="submit">Apply</button>
+    {% if query or status_form.status.value %}<a href="{% url 'workshop:project-list' %}">Reset</a>{% endif %}
   </form>
   <p class="muted">{{ paginator.count }} project{{ paginator.count|pluralize }}{% if query %} matching “{{ query }}”{% endif %}</p>
   {% if projects %}
@@ -48,8 +53,8 @@
     </div>
   {% else %}
     <div class="panel">
-      {% if query %}
-        <p>No projects match your search. Try another title, manufacturer, or model.</p>
+      {% if query or status_form.status.value %}
+        <p>No projects match the current filters. Try another search or reset the filters.</p>
       {% else %}
         <p>No car projects yet.</p>
       {% endif %}

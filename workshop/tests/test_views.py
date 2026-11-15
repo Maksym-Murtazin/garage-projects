@@ -47,6 +47,57 @@ class DashboardTests(TestCase):
         self.assertEqual(response.context["num_visits"], 2)
         self.assertEqual(self.client.session["num_visits"], 2)
 
+        for route, params, count_key in (
+            ("workshop:project-list", "", "project_count"),
+            ("workshop:project-list", "?status=in_progress", "active_project_count"),
+            ("workshop:task-list", "?status=open", "open_task_count"),
+            ("members:member-list", "?status=active", "member_count"),
+        ):
+            with self.subTest(route=route, params=params):
+                url = reverse(route) + params
+                self.assertContains(response, f'class="panel statistic-link" href="{url}"')
+                listing = self.client.get(url)
+                self.assertEqual(listing.context["paginator"].count, response.context[count_key])
+
+    def test_dashboard_filters_combine_with_search_and_survive_pagination(self):
+        self.client.force_login(self.member)
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        category = TaskCategory.objects.create(name="Suspension")
+        for number in range(11):
+            project = CarProject.objects.create(
+                title=f"Demo {number:02}", manufacturer=manufacturer, model="320i",
+                year=1989, status=CarProject.Status.IN_PROGRESS,
+            )
+            Task.objects.create(
+                title=f"Demo {number:02}", project=project, category=category,
+                status=Task.Status.TODO if number % 2 else Task.Status.IN_PROGRESS,
+            )
+            get_user_model().objects.create_user(
+                username=f"demo{number:02}", employee_code=f"GRG{number + 10:05d}",
+            )
+        for route, status in (
+            ("workshop:project-list", "in_progress"),
+            ("workshop:task-list", "open"),
+            ("members:member-list", "active"),
+        ):
+            with self.subTest(route=route):
+                url = reverse(route)
+                params = {"q": "demo", "status": status}
+                response = self.client.get(url, params)
+                self.assertEqual(response.context["paginator"].count, 11)
+                self.assertContains(response, f'?q=demo&amp;status={status}&amp;page=2')
+                self.assertContains(response, f'value="{status}" selected')
+                second = self.client.get(url, {**params, "page": 2})
+                self.assertEqual(len(second.context["page_obj"]), 1)
+                self.assertContains(second, f'value="{status}" selected')
+                self.assertEqual(
+                    self.client.get(url, {**params, "q": "missing"}).context["paginator"].count, 0,
+                )
+                invalid = self.client.get(url, {"status": "invalid"})
+                self.assertEqual(invalid.context["paginator"].count, 0)
+                form_key = "filter_form" if route == "workshop:task-list" else "status_form"
+                self.assertIn("status", invalid.context[form_key].errors)
+
     def test_member_can_sign_in_and_sign_out(self):
         response = self.client.post(reverse("login"), {
             "username": "mechanic", "password": "test-password",

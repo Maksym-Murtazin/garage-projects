@@ -14,8 +14,13 @@
       <label for="member-search">Search members</label>
       <input id="member-search" type="search" name="q" value="{{ query }}" placeholder="Username, name, or employee code">
     </div>
-    <button type="submit">Search</button>
-    {% if query %}<a href="{% url 'members:member-list' %}">Clear search</a>{% endif %}
+    <div>
+      {{ status_form.status.label_tag }}
+      {{ status_form.status }}
+      {{ status_form.status.errors }}
+    </div>
+    <button type="submit">Apply</button>
+    {% if query or status_form.status.value %}<a href="{% url 'members:member-list' %}">Reset</a>{% endif %}
   </form>
   <p class="muted">{{ paginator.count }} member{{ paginator.count|pluralize }}{% if query %} matching “{{ query }}”{% endif %}</p>
   {% if members %}
@@ -44,7 +49,7 @@
     </div>
   {% else %}
     <div class="panel">
-      <p>No members match your search. Try another username, name, or employee code.</p>
+      <p>No members match the current filters. Try another search or reset the filters.</p>
     </div>
   {% endif %}
   {% include "includes/pagination.html" %}

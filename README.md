@@ -18,6 +18,10 @@ Member, manufacturer, car project, task category, and task models are ready.
 All five models can be managed through the admin site.
 The workshop dashboard is available after signing in. It displays project,
 task, and active member counts, plus dashboard visits in the current session.
+Each statistics card links to the matching list: all projects, projects in progress,
+open tasks (to do and in progress), or active members. Project and member lists
+include status filters; the task status filter includes an Open tasks option.
+These filters work with search, remain selected across pages, and can be reset.
 The project list supports searching by title, manufacturer, or car model and
 shows 10 projects per page, keeping the search when switching pages. Each project
 has a detail page with vehicle information, a description, team members, and tasks.
