@@ -69,6 +69,10 @@ tbody tr:last-child > * { border-bottom: 0; }
 .team-options legend { font-weight: 600; }
 .team-options label { display: flex; align-items: baseline; gap: 12px; margin: 16px 0; overflow-wrap: anywhere; }
 .team-options input[type="checkbox"] { width: auto; flex-shrink: 0; accent-color: #17695e; }
+.member-sections { display: grid; gap: 32px; padding-bottom: 48px; }
+.member-sections > section { min-width: 0; }
+.member-section > h2 { margin-bottom: 16px; }
+.member-section > .panel { margin: 0; }
 .project-tasks { margin: 32px 0; }
 .project-tasks > h2 { margin-bottom: 16px; }
 @media (max-width: 900px) {
