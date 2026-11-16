@@ -1,102 +1,37 @@
 # Garage Projects
 
-A Django web application for a small tuning and restoration workshop to
-organize car projects, coordinate team members, and track workshop tasks.
+A Django application for a small tuning and restoration workshop. Manage car
+projects, coordinate project teams, and track work from the first inspection
+to the final checks.
 
-## Planned features
+## Features
 
-- Manage car projects, manufacturers, team members, and task categories.
-- Assign team members to projects and allow members to join or leave a project.
-- Track tasks by assignee, status, priority, and due date.
-- Search and filter lists with pagination.
-- View project progress and workshop statistics.
-- Sign in to access the shared workshop workspace.
+- Create, view, edit, and delete car projects, tasks, and workshop members.
+- Manage manufacturers and task categories, with protection against deleting
+  records that are still in use.
+- Join or leave project teams, or select the whole team through **Manage team**.
+- Track task status, priority, optional due dates, and assignments to team members.
+- View completed-task counts, progress bars, and percentages for each project.
+- Search all lists and filter projects, tasks, and members. Lists show 10 records
+  per page and preserve search and filters across pages.
+- Open matching lists from dashboard statistics and access your profile from
+  your username in the navigation. The dashboard also counts visits per session.
+- Sign in to a shared workshop workspace with server-rendered templates and
+  custom CSS. All five models are also available in Django admin.
 
-## Development status
+## Technology
 
-Member, manufacturer, car project, task category, and task models are ready.
-All five models can be managed through the admin site.
-The workshop dashboard is available after signing in. It displays project,
-task, and active member counts, plus dashboard visits in the current session.
-Each statistics card links to the matching list: all projects, projects in progress,
-open tasks (to do and in progress), or active members. Project and member lists
-include status filters; the task status filter includes an Open tasks option.
-These filters work with search, remain selected across pages, and can be reset.
-The project list supports searching by title, manufacturer, or car model and
-shows 10 projects per page, keeping the search when switching pages. Each project
-has a detail page with vehicle information, a description, team members, and tasks.
-The project list and detail pages show task progress: completed tasks out of the
-total, a progress bar, and a rounded percentage. Projects without tasks display
-"No tasks yet." Progress reflects current task statuses; the project status is
-still set manually.
-Signed-in members can create, edit, and delete projects through the site.
-Deletion requires a confirmation page and removes the project's tasks as well.
-Members can join or leave a project from its detail page. Leaving unassigns all
-of that member's tasks in the project, including completed tasks, without changing
-their statuses. Team membership is managed separately from the project form.
-Signed-in members can use **Manage team** on a project to select its members or
-clear the team. Saving updates membership and unassigns removed members' tasks
-in one transaction, including completed tasks, without changing task statuses.
-Other projects and their assignments are preserved; invalid selections save nothing.
-The task list supports search by title, project, assignee username, or employee
-code, with status, priority, and project filters. Pagination preserves these
-parameters. Task titles link to detail pages with the full description, project,
-category, assignee, status, priority, and due date. Signed-in members can create
-tasks from a project's detail page and edit them from the task detail page.
-The project stays fixed, and assignee choices are limited to its team members.
-Tasks can also be left unassigned. Task deletion requires confirmation and
-returns to the project page, preserving the project and its other tasks.
-The member list shows usernames, full names, employee codes, and active or
-inactive status. Signed-in members can search by username, first name, last
-name, or employee code, with 10 results per page and search preserved in pagination.
-Each member has a detail page with their workshop information, joined projects,
-and assigned tasks, including completed work. Member profiles are linked from
-the member list, project teams, and task detail pages.
-The username in the navigation links to the signed-in member's own profile.
-Signed-in members can create ordinary workshop accounts from the member list.
-The form requires a unique username, a valid unique employee code, and a password
-with confirmation; first and last names are optional. Django validates and hashes
-the password. New accounts have no staff or superuser privileges. After creation,
-the creator stays signed in and is redirected to the new member's profile.
-Signed-in members can edit a member's username, first name, last name, and
-employee code from their profile. This form preserves passwords, account status,
-and permissions, and returns to the edited profile after saving.
-Deleting a member requires confirmation and preserves projects and tasks.
-The member leaves all project teams, and their tasks become unassigned without
-changing status. Signed-in members cannot delete their own account, staff
-accounts, or superusers through the workshop site.
-The manufacturer list is available to signed-in members and supports searching
-by name or country. Results are sorted by name with 10 manufacturers per page,
-and pagination preserves the search.
-Signed-in members can create and edit manufacturers from this list. Both name
-and country are required, and manufacturer names must be unique. Saving returns
-to the list; editing a manufacturer preserves its links to existing projects.
-Unused manufacturers can be deleted after confirmation. If a manufacturer is
-used by projects, the confirmation page lists those projects and blocks deletion.
-Submitting a deletion request for a manufacturer in use also preserves it and
-returns the explanation, including when a project was added after opening the page.
-The task category list is available to signed-in members, with search by name
-and alphabetical ordering. It shows 10 categories per page and preserves the
-search when switching pages.
-Signed-in members can create and edit task categories from this list. Names are
-required and must be unique. Saving returns to the list, and renaming a category
-preserves its links to existing tasks.
-Unused categories can be deleted after confirmation. Categories used by tasks,
-including completed tasks, cannot be deleted. The page lists the related tasks
-and their projects; direct deletion requests are also blocked.
-Development takes place
-on the `develop` branch.
+Python 3.12, Django 5.2.19, SQLite, Django templates, and CSS.
+Dependencies are listed in [requirements.txt](requirements.txt).
+Development takes place on the `develop` branch.
 
 ## Local setup
 
-Use Python 3.12. The project currently uses Django 5.2.19 and SQLite.
-
-Clone the repository and switch to the development branch:
+Install Python 3.12 and Git, then clone the development branch:
 
 ```text
-git clone https://github.com/Maksym-Murtazin/garage-projects.git
+git clone --branch develop https://github.com/Maksym-Murtazin/garage-projects.git
 cd garage-projects
-git switch develop
 ```
 
 ### Windows (PowerShell)
@@ -106,7 +41,6 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe manage.py check
 .\.venv\Scripts\python.exe manage.py migrate
-.\.venv\Scripts\python.exe manage.py runserver
 ```
 
 ### Linux / macOS
@@ -116,100 +50,169 @@ python3.12 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python manage.py check
 .venv/bin/python manage.py migrate
-.venv/bin/python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/ and sign in with a workshop account to see the dashboard.
-Create an administrator using the steps below, or use a member account created
-through the admin site. Ordinary active members can access the dashboard without
-staff permissions. Use **Sign out** to end the session.
-Stop the server with `Ctrl+C`.
+Next, choose either the demo workshop or your own administrator account below.
+Create an account before starting the server so you can sign in immediately.
 
-### Demo workshop
+### Option A: demo workshop
 
-After `migrate`, optionally load fictional workshop data into an empty database
-before creating any accounts:
+Run this after migrations, before creating any accounts or workshop records:
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py seed_demo
 ```
 
-On Linux/macOS, use `.venv/bin/python manage.py seed_demo`.
-The command creates 4 members, 3 manufacturers, 5 categories, 5 car projects,
-and 12 tasks. Examples include restoration and track preparation, all project
-and task statuses, different priorities, unassigned tasks, optional due dates,
-and a project without a team or tasks. Dates are relative to the first run.
+On Linux/macOS:
 
-Sign in as `demo` using the randomly generated password printed by the command.
-Save it locally: it is shown only once. This is an ordinary account without
-admin privileges. The other fictional members cannot sign in until a password
-is set. To reset the demo password, use `manage.py changepassword demo` with
-your virtual environment's Python.
+```bash
+.venv/bin/python manage.py seed_demo
+```
 
-If any workshop records or accounts already exist, the command leaves the
-database unchanged. Re-running it does not duplicate data, reset passwords,
-or overwrite edits. Loading is atomic: a failure leaves no partial demo data.
-Use a separate empty local database if you already have data to keep.
+This creates fictional data: **4 members, 3 manufacturers, 5 categories,
+5 projects, and 12 tasks**. Examples include restoration and track preparation,
+all project and task statuses, different priorities, unassigned tasks, and a
+project without a team or tasks. Due dates are relative to the first run.
 
-### Database setup
+Sign in as **demo** using the randomly generated password printed by the command.
+Save it locally: the password is shown only once. This account has no admin
+privileges. The other demo members cannot sign in until a password is set.
 
-The initial migration creates the custom `Member` model. Each member has a
-unique employee code: `GRG` followed by five ASCII digits, such as `GRG00001`.
+The command only populates an empty workshop database. If any accounts or
+workshop records exist, it changes nothing. Re-running it does not duplicate
+records, reset passwords, or overwrite edits. Loading is atomic: a failure
+leaves no partial demo data. Use a separate empty local database if you want
+sample data without replacing existing work.
 
-Car projects store a title, manufacturer, car model, production year, optional
-description, and status (planned, in progress, or completed). A project can have
-multiple team members, and a member can work on several projects. Manufacturers
-referenced by projects cannot be deleted.
+To reset the demo password:
 
-Task categories have unique names, such as Bodywork, Electrical, or Suspension,
-and are sorted alphabetically.
+```powershell
+.\.venv\Scripts\python.exe manage.py changepassword demo
+```
 
-Tasks belong to a project and category, with an optional assignee and due date.
-They have a title, optional description, status (to do, in progress, or done),
-and priority (low, medium, or high). Model validation requires an assignee to
-belong to the selected project. Deleting an assignee leaves the task unassigned;
-deleting a project also deletes its tasks. Categories used by tasks cannot be
-deleted.
+On Linux/macOS, use `.venv/bin/python manage.py changepassword demo`.
 
-After applying migrations, you can create a local administrator:
+### Option B: your own account
+
+Create an administrator for an empty workshop, or add one after loading the demo:
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py createsuperuser
 ```
 
 On Linux/macOS, use `.venv/bin/python manage.py createsuperuser`.
-Enter a username, email, employee code, and password when prompted.
-The admin login is available at http://127.0.0.1:8000/admin/.
-Open **Members** to add or edit workshop members. The member list displays
-employee codes and supports searching by code, username, name, or email.
-Employee codes are required and must be unique. Admin access requires a staff
-account with the appropriate permissions; a superuser has full access.
+Enter a username, email, unique employee code, and password when prompted.
+An employee code is `GRG` followed by five digits, such as `GRG00001`.
+The demo already uses `GRG00001` through `GRG00004`; choose a different code
+when adding an administrator to it.
 
-Open **Manufacturers** to add, edit, or delete manufacturers. The list displays
-names and countries, supports searching both fields, and has a country filter.
-
-Open **Car projects** to manage projects and select their team members. The list
-shows the manufacturer, car model, year, and status. Search by project title,
-manufacturer, or car model, and filter by status or manufacturer.
-
-Open **Task categories** to add, edit, or delete categories and search by name.
-
-Open **Tasks** to manage tasks and assign project members. Search by task title,
-project title, assignee username, or employee code. Filter by status, priority,
-category, or project, and browse by due date. The form rejects an assignee who
-does not belong to the selected project; tasks can also be left unassigned.
-
-## Tests
+### Start the server
 
 ```powershell
+.\.venv\Scripts\python.exe manage.py runserver
+```
+
+On Linux/macOS, use `.venv/bin/python manage.py runserver`.
+Open [the workshop](http://127.0.0.1:8000/) and sign in. Use **Sign out** to end
+the session and `Ctrl+C` in the terminal to stop the server.
+The [admin site](http://127.0.0.1:8000/admin/) requires a superuser or a staff
+account with the appropriate permissions.
+
+## Using the workshop
+
+1. Create manufacturers, task categories, and ordinary member accounts from
+   their respective lists if you started without demo data.
+2. Create a project with its vehicle information and description.
+3. Open **Manage team** on the project and select its members, or use
+   **Join project** to add yourself.
+4. Use **Create task** on the project page. Choose a category, status, priority,
+   optional due date, and a team member, or leave the task unassigned.
+5. Update tasks as work progresses. The progress bar reflects completed tasks;
+   the project's own status is set manually.
+
+| List | Search | Filters |
+| --- | --- | --- |
+| Projects | Title, manufacturer, car model | Project status |
+| Tasks | Title, project title, assignee username or employee code | Status (including Open tasks), priority, project |
+| Members | Username, first name, last name, employee code | Active or inactive accounts |
+| Manufacturers | Name, country | — |
+| Categories | Name | — |
+
+**Open tasks** combines To do and In progress. Dashboard links apply the filters
+matching their counts. Use **Reset** to clear filters and search on projects,
+tasks, or members; manufacturer and category lists offer **Clear search**.
+
+### Accounts and data rules
+
+This is a shared internal workspace. Signed-in members can manage workshop
+records and create ordinary accounts; there is no public registration page.
+Creating a member validates and hashes their password without switching the
+creator's session. Profile editing preserves passwords, account status, and
+permissions. Your profile lists your projects and assigned tasks, including
+completed work.
+
+- Task assignees must belong to the project's team. A task's project cannot be
+  changed through its edit form.
+- Leaving a project or removing members through **Manage team** unassigns all
+  of their tasks in that project, including completed tasks, without changing
+  task statuses. Team changes and unassignment are saved in one transaction.
+- Deleting a project also deletes its tasks. Deleting a task preserves its
+  project and the other tasks.
+- Deleting a member preserves projects and tasks, removes team memberships,
+  and leaves their tasks unassigned. You cannot delete yourself, staff accounts,
+  or superusers through the workshop site.
+- Manufacturers referenced by projects and categories referenced by any tasks
+  cannot be deleted. The confirmation page shows the dependent records.
+- Deletions require confirmation. Form submissions, joining, leaving, and
+  signing out use POST requests with CSRF protection.
+
+## Data model and source layout
+
+| Model | Purpose and relationships |
+| --- | --- |
+| `Member` | Extends `AbstractUser` with a unique employee code; joins projects and receives task assignments |
+| `Manufacturer` | Stores a name and country; referenced by car projects |
+| `CarProject` | Stores vehicle information, description, and status; belongs to a manufacturer and has many members and tasks |
+| `TaskCategory` | Names a type of work; referenced by tasks |
+| `Task` | Belongs to a project and category; has an optional assignee and due date, plus status and priority |
+
+| Path | Contents |
+| --- | --- |
+| `config/` | Settings and root URL configuration |
+| `members/` | Custom user model, member forms, views, templates, and tests |
+| `workshop/` | Projects, tasks, manufacturers, categories, and their tests |
+| `workshop/management/commands/seed_demo.py` | Demo data command |
+| `workshop/static/workshop/css/styles.css` | Shared site styles |
+| `templates/` | Base layout, login page, and pagination include |
+
+## Checks and tests
+
+On Windows (PowerShell):
+
+```powershell
+.\.venv\Scripts\python.exe manage.py check
+.\.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
 .\.venv\Scripts\python.exe manage.py test
 ```
 
-On Linux/macOS, use `.venv/bin/python manage.py test`.
+On Linux/macOS:
 
-### Development settings
+```bash
+.venv/bin/python manage.py check
+.venv/bin/python manage.py makemigrations --check --dry-run
+.venv/bin/python manage.py test
+```
 
-These settings are for local development: `DEBUG` is enabled, only local hosts
-are allowed, and the fallback secret key is a public development placeholder.
-You can override it with the `DJANGO_SECRET_KEY` environment variable.
-Deployment configuration will be added separately.
+Tests cover model validation, admin integration, authentication, CRUD operations,
+search and filters, pagination, team assignments, protected deletion, project
+progress, dashboard links, and demo data loading. Django creates a separate test
+database; running tests does not replace the local workshop data.
+
+## Local configuration
+
+The supplied settings are for local development: `DEBUG` is enabled, only local
+hosts are allowed, and the fallback secret key is a public development placeholder.
+Set the `DJANGO_SECRET_KEY` environment variable to override it. Production
+deployment requires separate configuration.
+
+The local `db.sqlite3`, virtual environment, and `.env` files are excluded from Git.
