@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Delete manufacturer | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Manufacturers</p>
+    <h1>Delete manufacturer</h1>
+  </section>
+  <section class="panel edit-form">
+    {% if projects %}
+      <p><strong>{{ manufacturer.name }}</strong> cannot be deleted because it is used in these projects:</p>
+      <ul>
+        {% for project in projects %}
+          <li><a href="{{ project.get_absolute_url }}">{{ project.title }}</a></li>
+        {% endfor %}
+      </ul>
+      <p>Update the projects' manufacturer before trying again.</p>
+      <a href="{% url 'workshop:manufacturer-list' %}">Back to manufacturers</a>
+    {% else %}
+      <p>Are you sure you want to delete <strong>{{ manufacturer.name }}</strong>
+        ({{ manufacturer.country }})?</p>
+      <p>This action cannot be undone.</p>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+          <button class="danger" type="submit">Delete manufacturer</button>
+          <a href="{% url 'workshop:manufacturer-list' %}">Cancel</a>
+        </div>
+      </form>
+    {% endif %}
+  </section>
+{% endblock %}

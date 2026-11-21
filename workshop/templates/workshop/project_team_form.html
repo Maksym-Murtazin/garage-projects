@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Manage team | {{ project.title }} | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <a href="{{ project.get_absolute_url }}">Back to project</a>
+    <h1>Manage team</h1>
+    <p class="muted">{{ project.title }}</p>
+  </section>
+  <form method="post" class="panel edit-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <fieldset class="team-options" aria-describedby="team-help">
+      <legend>{{ form.members.label }}</legend>
+      <p class="muted" id="team-help">Select the members for this project, or clear all selections to leave the team empty. Removing members will unassign all their tasks in this project, including completed tasks. Task statuses will stay unchanged.</p>
+      {{ form.members.errors }}
+      {{ form.members }}
+    </fieldset>
+    <div class="form-actions">
+      <button type="submit">Save team</button>
+      <a href="{{ project.get_absolute_url }}">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

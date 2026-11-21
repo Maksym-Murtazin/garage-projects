@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Car projects | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Projects</p>
+    <h1>Car projects</h1>
+    <p class="muted">Builds and restorations across the workshop.</p>
+    <a class="button" href="{% url 'workshop:project-create' %}">Create project</a>
+  </section>
+  <form class="search-form" method="get" role="search">
+    <div>
+      <label for="project-search">Search projects</label>
+      <input id="project-search" type="search" name="q" value="{{ query }}" placeholder="Title, manufacturer, or car model">
+    </div>
+    <div>
+      {{ status_form.status.label_tag }}
+      {{ status_form.status }}
+      {{ status_form.status.errors }}
+    </div>
+    <button type="submit">Apply</button>
+    {% if query or status_form.status.value %}<a href="{% url 'workshop:project-list' %}">Reset</a>{% endif %}
+  </form>
+  <p class="muted">{{ paginator.count }} project{{ paginator.count|pluralize }}{% if query %} matching “{{ query }}”{% endif %}</p>
+  {% if projects %}
+    <div class="table-container">
+      <table>
+        <caption class="visually-hidden">Workshop car projects</caption>
+        <thead>
+          <tr>
+            <th scope="col">Project</th>
+            <th scope="col">Manufacturer</th>
+            <th scope="col">Model</th>
+            <th scope="col">Year</th>
+            <th scope="col">Status</th>
+            <th scope="col">Task progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects %}
+            <tr>
+              <th scope="row"><a href="{% url 'workshop:project-detail' project.pk %}">{{ project.title }}</a></th>
+              <td>{{ project.manufacturer.name }}</td>
+              <td>{{ project.model }}</td>
+              <td>{{ project.year }}</td>
+              <td>{{ project.get_status_display }}</td>
+              <td>{% include "workshop/includes/project_progress.html" %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="panel">
+      {% if query or status_form.status.value %}
+        <p>No projects match the current filters. Try another search or reset the filters.</p>
+      {% else %}
+        <p>No car projects yet.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% include "includes/pagination.html" %}
+{% endblock %}
