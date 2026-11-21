@@ -100,6 +100,9 @@ class DashboardTests(TestCase):
                 self.assertEqual(invalid.context["paginator"].count, 0)
                 form_key = "filter_form" if route == "workshop:task-list" else "status_form"
                 self.assertIn("status", invalid.context[form_key].errors)
+                self.assertContains(invalid, "Correct the filters above")
+                self.assertNotContains(invalid, "match the current filters")
+                self.assertNotContains(invalid, 'class="muted">0 ')
 
     def test_member_can_sign_in_and_sign_out(self):
         response = self.client.post(reverse("login"), {

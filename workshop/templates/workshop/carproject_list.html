@@ -22,43 +22,47 @@
     <button type="submit">Apply</button>
     {% if query or status_form.status.value %}<a href="{% url 'workshop:project-list' %}">Reset</a>{% endif %}
   </form>
-  <p class="muted">{{ paginator.count }} project{{ paginator.count|pluralize }}{% if query %} matching “{{ query }}”{% endif %}</p>
-  {% if projects %}
-    <div class="table-container">
-      <table>
-        <caption class="visually-hidden">Workshop car projects</caption>
-        <thead>
-          <tr>
-            <th scope="col">Project</th>
-            <th scope="col">Manufacturer</th>
-            <th scope="col">Model</th>
-            <th scope="col">Year</th>
-            <th scope="col">Status</th>
-            <th scope="col">Task progress</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for project in projects %}
-            <tr>
-              <th scope="row"><a href="{% url 'workshop:project-detail' project.pk %}">{{ project.title }}</a></th>
-              <td>{{ project.manufacturer.name }}</td>
-              <td>{{ project.model }}</td>
-              <td>{{ project.year }}</td>
-              <td>{{ project.get_status_display }}</td>
-              <td>{% include "workshop/includes/project_progress.html" %}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  {% if status_form.errors %}
+    <p class="panel">Correct the filters above to see matching projects.</p>
   {% else %}
-    <div class="panel">
-      {% if query or status_form.status.value %}
-        <p>No projects match the current filters. Try another search or reset the filters.</p>
-      {% else %}
-        <p>No car projects yet.</p>
-      {% endif %}
-    </div>
+    <p class="muted">{{ paginator.count }} project{{ paginator.count|pluralize }}{% if query %} matching “{{ query }}”{% endif %}</p>
+    {% if projects %}
+      <div class="table-container">
+        <table>
+          <caption class="visually-hidden">Workshop car projects</caption>
+          <thead>
+            <tr>
+              <th scope="col">Project</th>
+              <th scope="col">Manufacturer</th>
+              <th scope="col">Model</th>
+              <th scope="col">Year</th>
+              <th scope="col">Status</th>
+              <th scope="col">Task progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for project in projects %}
+              <tr>
+                <th scope="row"><a href="{% url 'workshop:project-detail' project.pk %}">{{ project.title }}</a></th>
+                <td>{{ project.manufacturer.name }}</td>
+                <td>{{ project.model }}</td>
+                <td>{{ project.year }}</td>
+                <td>{{ project.get_status_display }}</td>
+                <td>{% include "workshop/includes/project_progress.html" %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="panel">
+        {% if query or status_form.status.value %}
+          <p>No projects match the current filters. Try another search or reset the filters.</p>
+        {% else %}
+          <p>No car projects yet.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+    {% include "includes/pagination.html" %}
   {% endif %}
-  {% include "includes/pagination.html" %}
 {% endblock %}
