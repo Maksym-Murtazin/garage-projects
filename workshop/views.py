@@ -9,6 +9,8 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.views.decorators.http import require_POST
 
+from config.view_mixins import UniqueConflictFormMixin
+
 from .forms import (
     CarProjectForm, ManufacturerForm, ProjectStatusForm, ProjectTeamForm,
     TaskCategoryForm, TaskFilterForm, TaskForm,
@@ -51,14 +53,14 @@ class TaskCategoryListView(LoginRequiredMixin, ListView):
         return context
 
 
-class TaskCategoryCreateView(LoginRequiredMixin, CreateView):
+class TaskCategoryCreateView(LoginRequiredMixin, UniqueConflictFormMixin, CreateView):
     model = TaskCategory
     form_class = TaskCategoryForm
     template_name = "workshop/taskcategory_form.html"
     success_url = reverse_lazy("workshop:category-list")
 
 
-class TaskCategoryUpdateView(LoginRequiredMixin, UpdateView):
+class TaskCategoryUpdateView(LoginRequiredMixin, UniqueConflictFormMixin, UpdateView):
     model = TaskCategory
     form_class = TaskCategoryForm
     template_name = "workshop/taskcategory_form.html"
@@ -103,14 +105,14 @@ class ManufacturerListView(LoginRequiredMixin, ListView):
         return context
 
 
-class ManufacturerCreateView(LoginRequiredMixin, CreateView):
+class ManufacturerCreateView(LoginRequiredMixin, UniqueConflictFormMixin, CreateView):
     model = Manufacturer
     form_class = ManufacturerForm
     template_name = "workshop/manufacturer_form.html"
     success_url = reverse_lazy("workshop:manufacturer-list")
 
 
-class ManufacturerUpdateView(LoginRequiredMixin, UpdateView):
+class ManufacturerUpdateView(LoginRequiredMixin, UniqueConflictFormMixin, UpdateView):
     model = Manufacturer
     form_class = ManufacturerForm
     template_name = "workshop/manufacturer_form.html"

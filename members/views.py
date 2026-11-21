@@ -6,6 +6,8 @@ from django.http import Http404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+from config.view_mixins import UniqueConflictFormMixin
+
 from .forms import MemberCreationForm, MemberStatusForm, MemberUpdateForm
 
 
@@ -61,7 +63,7 @@ class MemberDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class MemberCreateView(LoginRequiredMixin, CreateView):
+class MemberCreateView(LoginRequiredMixin, UniqueConflictFormMixin, CreateView):
     model = get_user_model()
     form_class = MemberCreationForm
     template_name = "members/member_form.html"
@@ -70,7 +72,7 @@ class MemberCreateView(LoginRequiredMixin, CreateView):
         return reverse("members:member-detail", kwargs={"pk": self.object.pk})
 
 
-class MemberUpdateView(LoginRequiredMixin, UpdateView):
+class MemberUpdateView(LoginRequiredMixin, UniqueConflictFormMixin, UpdateView):
     model = get_user_model()
     form_class = MemberUpdateForm
     template_name = "members/member_form.html"

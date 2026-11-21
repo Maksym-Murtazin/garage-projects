@@ -1,7 +1,10 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from workshop.views import ManufacturerCreateView
 from workshop.models import CarProject, Manufacturer, Task, TaskCategory
 
 
@@ -789,6 +792,20 @@ class ManufacturerFormTests(TestCase):
         cls.manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
         cls.create_url = reverse("workshop:manufacturer-create")
         cls.update_url = reverse("workshop:manufacturer-update", args=[cls.manufacturer.pk])
+
+    def test_conflicting_insert_after_validation_returns_field_error(self):
+        save_valid_form = ManufacturerCreateView.form_valid
+
+        def insert_competing_record(view, form):
+            Manufacturer.objects.create(name="Toyota", country="Japan")
+            return save_valid_form(view, form)
+
+        self.client.force_login(self.member)
+        with patch.object(ManufacturerCreateView, "form_valid", insert_competing_record):
+            response = self.client.post(self.create_url, {"name": "Toyota", "country": "US"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("name", response.context["form"].errors)
+        self.assertEqual(Manufacturer.objects.get(name="Toyota").country, "Japan")
 
     def test_login_required_and_create_and_edit_preserve_project_links(self):
         for url in (self.create_url, self.update_url):
