@@ -323,6 +323,9 @@ class MemberDeleteTests(TestCase):
             username="admin", employee_code="GRG00004", is_superuser=True,
         )
         self.client.force_login(self.viewer)
+        missing_url = reverse("members:member-delete", args=[admin.pk + 1])
+        self.assertEqual(self.client.get(missing_url).status_code, 404)
+        self.assertEqual(self.client.post(missing_url).status_code, 404)
         for member in (self.viewer, staff, admin):
             with self.subTest(member=member.username):
                 url = reverse("members:member-delete", args=[member.pk])
@@ -330,6 +333,6 @@ class MemberDeleteTests(TestCase):
                     self.client.get(reverse("members:member-detail", args=[member.pk])),
                     f'href="{url}"',
                 )
-                self.assertEqual(self.client.get(url).status_code, 403)
-                self.assertEqual(self.client.post(url).status_code, 403)
+                self.assertEqual(self.client.get(url).status_code, 404)
+                self.assertEqual(self.client.post(url).status_code, 404)
                 self.assertTrue(get_user_model().objects.filter(pk=member.pk).exists())

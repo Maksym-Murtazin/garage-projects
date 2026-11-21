@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import Http404
 from django.urls import reverse, reverse_lazy
@@ -94,8 +93,7 @@ class MemberDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy("members:member-list")
     http_method_names = ["get", "post", "head", "options"]
 
-    def get_object(self, queryset=None):
-        member = super().get_object(queryset)
-        if member.pk == self.request.user.pk or member.is_staff or member.is_superuser:
-            raise PermissionDenied("This account cannot be deleted through the workshop.")
-        return member
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            is_staff=False, is_superuser=False,
+        ).exclude(pk=self.request.user.pk)
