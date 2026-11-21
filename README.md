@@ -221,6 +221,10 @@ for production management commands such as migrations and static collection:
 - `DJANGO_SECRET_KEY` — a private, randomly generated key kept across restarts.
 - `DJANGO_ALLOWED_HOSTS` — the deployment hostnames, separated by commas.
 
+Use [.env.example](.env.example) as a template. Set the values in your hosting
+environment or configure your process launcher to load a private `.env` file.
+Django reads the process environment and does not load that file automatically.
+
 Run `python manage.py check --deploy` with the production environment before
 deployment. Configure TLS at the web server and serve the output of
 `python manage.py collectstatic` from `staticfiles/`.
