@@ -208,11 +208,19 @@ search and filters, pagination, team assignments, protected deletion, project
 progress, dashboard links, and demo data loading. Django creates a separate test
 database; running tests does not replace the local workshop data.
 
-## Local configuration
+## Configuration
 
-The supplied settings are for local development: `DEBUG` is enabled, only local
-hosts are allowed, and the fallback secret key is a public development placeholder.
-Set the `DJANGO_SECRET_KEY` environment variable to override it. Production
-deployment requires separate configuration.
+Management commands use `config.settings.dev` by default. This enables debug
+pages and uses a development-only key for local testing.
 
-The local `db.sqlite3`, virtual environment, and `.env` files are excluded from Git.
+WSGI and ASGI default to `config.settings.prod`, which disables debug pages and
+requires HTTPS. Set these environment variables for the production server and
+for production management commands such as migrations and static collection:
+
+- `DJANGO_SETTINGS_MODULE=config.settings.prod`
+- `DJANGO_SECRET_KEY` — a private, randomly generated key kept across restarts.
+- `DJANGO_ALLOWED_HOSTS` — the deployment hostnames, separated by commas.
+
+Run `python manage.py check --deploy` with the production environment before
+deployment. Configure TLS at the web server and serve the output of
+`python manage.py collectstatic` from `staticfiles/`.
