@@ -44,15 +44,9 @@ class ManufacturerAdminTests(TestCase):
                 response = self.client.get(self.url, {"q": query})
                 self.assertEqual(list(response.context["cl"].queryset), expected)
 
-    def test_country_filter_combines_with_search(self):
-        response = self.client.get(self.url, {"country": "Germany"})
-        self.assertEqual(
-            list(response.context["cl"].queryset), [self.audi, self.bmw]
-        )
-        response = self.client.get(
-            self.url, {"country": "Germany", "q": "Audi"}
-        )
-        self.assertEqual(list(response.context["cl"].queryset), [self.audi])
+    def test_country_filter_is_absent_from_sidebar(self):
+        response = self.client.get(self.url)
+        self.assertFalse(response.context["cl"].has_filters)
 
 
 class CarProjectAdminTests(TestCase):

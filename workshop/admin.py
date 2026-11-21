@@ -7,7 +7,6 @@ from .models import CarProject, Manufacturer, Task, TaskCategory
 class ManufacturerAdmin(admin.ModelAdmin):
     list_display = ("name", "country")
     search_fields = ("name", "country")
-    list_filter = ("country",)
 
 
 @admin.register(CarProject)
