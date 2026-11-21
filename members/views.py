@@ -2,10 +2,19 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
+from django.http import Http404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from .forms import MemberCreationForm, MemberStatusForm, MemberUpdateForm
+
+
+def can_edit_member(actor, member):
+    return (
+        not member.is_staff
+        and not member.is_superuser
+        and (actor.pk == member.pk or actor.is_staff)
+    )
 
 
 class MemberListView(LoginRequiredMixin, ListView):
@@ -46,6 +55,7 @@ class MemberDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["can_edit_member"] = can_edit_member(self.request.user, self.object)
         context["projects"] = self.object.car_projects.select_related("manufacturer")
         context["tasks"] = self.object.assigned_tasks.select_related("project")
         return context
@@ -64,6 +74,12 @@ class MemberUpdateView(LoginRequiredMixin, UpdateView):
     model = get_user_model()
     form_class = MemberUpdateForm
     template_name = "members/member_form.html"
+
+    def get_object(self, queryset=None):
+        member = super().get_object(queryset)
+        if not can_edit_member(self.request.user, member):
+            raise Http404
+        return member
 
     def get_success_url(self):
         return reverse("members:member-detail", kwargs={"pk": self.object.pk})

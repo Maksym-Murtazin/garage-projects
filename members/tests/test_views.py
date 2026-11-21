@@ -198,7 +198,7 @@ class MemberUpdateTests(TestCase):
                 method(self.url),
                 f"{reverse('login')}?next={self.url}",
             )
-        self.client.force_login(self.viewer)
+        self.client.force_login(self.member)
         response = self.client.get(self.url)
         self.assertEqual(response.context["form"].initial["username"], "mechanic")
         self.assertEqual(set(response.context["form"].fields), set(self.data))
@@ -217,10 +217,10 @@ class MemberUpdateTests(TestCase):
         self.assertFalse(self.member.is_staff)
         self.assertFalse(self.member.is_superuser)
         self.assertTrue(self.member.is_active)
-        self.assertEqual(self.client.session["_auth_user_id"], str(self.viewer.pk))
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.member.pk))
 
     def test_edit_validates_code_and_uniqueness_without_rejecting_unchanged_values(self):
-        self.client.force_login(self.viewer)
+        self.client.force_login(self.member)
         for changes, field in (
             ({"employee_code": "invalid"}, "employee_code"),
             ({"employee_code": self.viewer.employee_code}, "employee_code"),
@@ -239,6 +239,28 @@ class MemberUpdateTests(TestCase):
         self.assertRedirects(
             response, reverse("members:member-detail", args=[self.member.pk]),
         )
+
+
+    def test_edit_permissions_match_profile_link(self):
+        staff = get_user_model().objects.create_user(
+            username="staff", employee_code="GRG00004", is_staff=True,
+        )
+        admin = get_user_model().objects.create_user(
+            username="admin", employee_code="GRG00005", is_superuser=True,
+        )
+        for actor, target, allowed in (
+            (self.viewer, self.member, False), (self.member, self.member, True),
+            (staff, self.member, True), (staff, staff, False),
+            (self.viewer, staff, False), (staff, admin, False),
+        ):
+            with self.subTest(actor=actor, target=target):
+                self.client.force_login(actor)
+                url = reverse("members:member-update", args=[target.pk])
+                profile = self.client.get(reverse("members:member-detail", args=[target.pk]))
+                self.assertEqual(url in profile.content.decode(), allowed)
+                self.assertEqual(self.client.get(url).status_code, 200 if allowed else 404)
+                if not allowed:
+                    self.assertEqual(self.client.post(url, self.data).status_code, 404)
 
 
 class MemberDeleteTests(TestCase):
