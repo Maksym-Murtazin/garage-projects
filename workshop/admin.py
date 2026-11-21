@@ -36,3 +36,6 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = ("status", "priority", "category", "project")
     list_select_related = ("project", "category", "assignee")
     date_hierarchy = "due_date"
+
+    def get_readonly_fields(self, request, obj=None):
+        return ("project",) if obj is not None else ()

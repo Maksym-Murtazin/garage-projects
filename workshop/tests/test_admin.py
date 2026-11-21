@@ -183,3 +183,27 @@ class TaskAdminTests(TestCase):
         task = Task.objects.get(title="Replace bushings")
         self.assertEqual(task.assignee, member)
         self.assertEqual(task.project, project)
+
+    def test_project_is_read_only_when_editing_a_task(self):
+        admin = get_user_model().objects.create_superuser(
+            username="admin", employee_code="GRG00001", password="test-password",
+        )
+        manufacturer = Manufacturer.objects.create(name="BMW", country="Germany")
+        project, other = [
+            CarProject.objects.create(title=title, manufacturer=manufacturer, model="320i", year=1989)
+            for title in ("Restoration", "Track build")
+        ]
+        category = TaskCategory.objects.create(name="Engine")
+        task = Task.objects.create(title="Inspect engine", project=project, category=category)
+        self.client.force_login(admin)
+        url = reverse("admin:workshop_task_change", args=[task.pk])
+        response = self.client.get(url)
+        self.assertNotIn("project", response.context["adminform"].form.fields)
+        response = self.client.post(url, {
+            "title": "Inspect valves", "project": other.pk, "category": category.pk,
+            "status": task.status, "priority": task.priority, "_save": "Save",
+        })
+        self.assertRedirects(response, reverse("admin:workshop_task_changelist"))
+        task.refresh_from_db()
+        self.assertEqual(task.title, "Inspect valves")
+        self.assertEqual(task.project, project)
