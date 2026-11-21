@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.contrib.admin.models import DELETION, LogEntry
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -320,6 +321,9 @@ class CarProjectDeleteTests(TestCase):
         })
         self.assertRedirects(response, reverse("workshop:project-list"))
         self.assertFalse(CarProject.objects.filter(pk=self.project.pk).exists())
+        entry = LogEntry.objects.get(user=self.member, action_flag=DELETION)
+        self.assertEqual(entry.object_id, str(self.project.pk))
+        self.assertIn(str((self.task.pk, self.task.assignee_id)), entry.change_message)
         self.assertFalse(Task.objects.filter(pk=self.task.pk).exists())
         self.assertTrue(Manufacturer.objects.filter(pk=self.manufacturer.pk).exists())
         self.assertTrue(TaskCategory.objects.filter(pk=self.category.pk).exists())
@@ -374,6 +378,9 @@ class ProjectMembershipTests(TestCase):
         for _ in range(2):
             self.assertRedirects(self.client.post(leave_url), self.project.get_absolute_url())
         self.assertQuerySetEqual(self.project.members.all(), [self.colleague])
+        entries = LogEntry.objects.filter(user=self.member, object_id=str(self.project.pk))
+        self.assertEqual(entries.count(), 2)
+        self.assertTrue(entries.filter(change_message__startswith="Left the project team").exists())
         self.assertCountEqual(
             self.project.tasks.filter(assignee=None).values_list("status", flat=True),
             Task.Status.values,
@@ -891,6 +898,7 @@ class ManufacturerDeleteTests(TestCase):
                 self.assertContains(response, project.get_absolute_url(), status_code=status)
                 self.assertNotContains(response, '<button class="danger"', status_code=status)
                 self.assertTrue(Manufacturer.objects.filter(pk=self.manufacturer.pk).exists())
+                self.assertFalse(LogEntry.objects.filter(action_flag=DELETION).exists())
                 project.refresh_from_db()
                 task.refresh_from_db()
                 self.assertEqual(project.manufacturer_id, self.manufacturer.pk)

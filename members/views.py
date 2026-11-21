@@ -5,6 +5,7 @@ from django.http import Http404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+from config.audit import AuditedDeletionMixin
 from config.view_mixins import UniqueConflictFormMixin
 
 from .forms import MemberCreationForm, MemberStatusForm, MemberUpdateForm
@@ -86,7 +87,7 @@ class MemberUpdateView(LoginRequiredMixin, UniqueConflictFormMixin, UpdateView):
         return reverse("members:member-detail", kwargs={"pk": self.object.pk})
 
 
-class MemberDeleteView(LoginRequiredMixin, DeleteView):
+class MemberDeleteView(LoginRequiredMixin, AuditedDeletionMixin, DeleteView):
     model = get_user_model()
     template_name = "members/member_confirm_delete.html"
     context_object_name = "member"
@@ -97,3 +98,8 @@ class MemberDeleteView(LoginRequiredMixin, DeleteView):
         return super().get_queryset().filter(
             is_staff=False, is_superuser=False,
         ).exclude(pk=self.request.user.pk)
+
+    def deletion_message(self):
+        projects = list(self.object.car_projects.values_list("pk", flat=True))
+        tasks = list(self.object.assigned_tasks.values_list("pk", flat=True))
+        return f"Deleted member. Removed from projects {projects}. Unassigned tasks {tasks}."

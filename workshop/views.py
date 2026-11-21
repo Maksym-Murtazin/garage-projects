@@ -9,6 +9,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.views.decorators.http import require_POST
 
+from config.audit import AuditedDeletionMixin, record_action
 from config.view_mixins import UniqueConflictFormMixin
 
 from .forms import (
@@ -67,7 +68,7 @@ class TaskCategoryUpdateView(LoginRequiredMixin, UniqueConflictFormMixin, Update
     success_url = reverse_lazy("workshop:category-list")
 
 
-class TaskCategoryDeleteView(LoginRequiredMixin, DeleteView):
+class TaskCategoryDeleteView(LoginRequiredMixin, AuditedDeletionMixin, DeleteView):
     model = TaskCategory
     template_name = "workshop/taskcategory_confirm_delete.html"
     context_object_name = "category"
@@ -119,7 +120,7 @@ class ManufacturerUpdateView(LoginRequiredMixin, UniqueConflictFormMixin, Update
     success_url = reverse_lazy("workshop:manufacturer-list")
 
 
-class ManufacturerDeleteView(LoginRequiredMixin, DeleteView):
+class ManufacturerDeleteView(LoginRequiredMixin, AuditedDeletionMixin, DeleteView):
     model = Manufacturer
     template_name = "workshop/manufacturer_confirm_delete.html"
     context_object_name = "manufacturer"
@@ -198,12 +199,17 @@ class CarProjectUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "workshop/carproject_form.html"
 
 
-class CarProjectDeleteView(LoginRequiredMixin, DeleteView):
+class CarProjectDeleteView(LoginRequiredMixin, AuditedDeletionMixin, DeleteView):
     model = CarProject
     template_name = "workshop/carproject_confirm_delete.html"
     context_object_name = "project"
     success_url = reverse_lazy("workshop:project-list")
     http_method_names = ["get", "post", "head", "options"]
+
+    def deletion_message(self):
+        members = list(self.object.members.values_list("pk", flat=True))
+        assignments = list(self.object.tasks.values_list("pk", "assignee_id"))
+        return f"Deleted project. Team {members}. Deleted tasks (ID, assignee ID): {assignments}."
 
 
 class ProjectTeamUpdateView(LoginRequiredMixin, UpdateView):
@@ -215,28 +221,47 @@ class ProjectTeamUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         with transaction.atomic():
-            removed_members = self.object.members.exclude(
-                pk__in=form.cleaned_data["members"],
-            )
-            self.object.tasks.filter(assignee__in=removed_members).update(assignee=None)
-            return super().form_valid(form)
+            project = CarProject.objects.select_for_update().get(pk=self.object.pk)
+            before = set(project.members.values_list("pk", flat=True))
+            after = {member.pk for member in form.cleaned_data["members"]}
+            removed = sorted(before - after)
+            added = sorted(after - before)
+            tasks = project.tasks.filter(assignee_id__in=removed)
+            assignments = list(tasks.values_list("pk", "assignee_id"))
+            tasks.update(assignee=None)
+            response = super().form_valid(form)
+            if added or removed:
+                record_action(
+                    self.request.user, project,
+                    f"Team added {added}, removed {removed}. "
+                    f"Cleared assignments (task ID, assignee ID): {assignments}.",
+                )
+            return response
 
 
 @login_required
 @require_POST
+@transaction.atomic
 def join_project(request, pk):
-    project = get_object_or_404(CarProject, pk=pk)
-    project.members.add(request.user)
+    project = get_object_or_404(CarProject.objects.select_for_update(), pk=pk)
+    if not project.members.filter(pk=request.user.pk).exists():
+        project.members.add(request.user)
+        record_action(request.user, project, "Joined the project team.")
     return redirect(project)
 
 
 @login_required
 @require_POST
+@transaction.atomic
 def leave_project(request, pk):
-    project = get_object_or_404(CarProject, pk=pk)
-    with transaction.atomic():
-        project.tasks.filter(assignee=request.user).update(assignee=None)
-        project.members.remove(request.user)
+    project = get_object_or_404(CarProject.objects.select_for_update(), pk=pk)
+    tasks = project.tasks.filter(assignee=request.user)
+    task_ids = list(tasks.values_list("pk", flat=True))
+    was_member = project.members.filter(pk=request.user.pk).exists()
+    tasks.update(assignee=None)
+    project.members.remove(request.user)
+    if was_member or task_ids:
+        record_action(request.user, project, f"Left the project team. Unassigned tasks {task_ids}.")
     return redirect(project)
 
 
@@ -315,7 +340,7 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class TaskDeleteView(LoginRequiredMixin, DeleteView):
+class TaskDeleteView(LoginRequiredMixin, AuditedDeletionMixin, DeleteView):
     model = Task
     template_name = "workshop/task_confirm_delete.html"
     context_object_name = "task"
