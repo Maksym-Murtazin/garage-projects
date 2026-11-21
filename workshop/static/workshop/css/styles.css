@@ -39,6 +39,8 @@ button:hover, .button:hover { background: #104d45; }
 .danger { background: #a32323; }
 .danger:hover { background: #7e1919; }
 .edit-form { max-width: 720px; margin-bottom: 32px; }
+form.edit-form { max-width: 560px; }
+.edit-form > .form-field:first-of-type { margin-top: 0; }
 .form-actions { display: flex; align-items: center; gap: 20px; }
 button.secondary { background: transparent; border-color: #89989f; }
 button.secondary:hover { background: #30434d; }
