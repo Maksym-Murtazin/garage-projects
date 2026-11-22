@@ -4,6 +4,53 @@ A Django application for a small tuning and restoration workshop. Manage car
 projects, coordinate project teams, and track work from the first inspection
 to the final checks.
 
+## Getting started
+
+Install Git and Python 3.12, then clone the project:
+
+```sh
+git clone --branch main https://github.com/Maksym-Murtazin/garage-projects.git
+cd garage-projects
+```
+
+Create and activate a virtual environment. On Windows (PowerShell):
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+On Linux or macOS:
+
+```sh
+python3.12 -m venv .venv
+source .venv/bin/activate
+```
+
+From the activated environment, start a local workshop with sample data:
+
+```sh
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py seed_demo
+python manage.py runserver
+```
+
+Open [the workshop](http://127.0.0.1:8000/) and sign in as **demo** with the
+password printed by `seed_demo`. Open a car project to see its team, tasks,
+and progress. Stop the local server with Ctrl+C.
+
+### Accounts and sample data
+
+On an empty database, `seed_demo` creates four members, three manufacturers,
+five categories, five projects, and twelve tasks. It skips an existing
+workshop. Use `python manage.py changepassword demo` to reset the demo password.
+
+For an empty workshop, skip `seed_demo` and run `python manage.py createsuperuser`
+after migrations. You can also create an administrator alongside the demo data.
+Choose a unique employee code (GRG followed by five digits). The sample accounts
+use GRG00001 through GRG00004. Sign in at [Django admin](http://127.0.0.1:8000/admin/).
+
 ## Features
 
 - Create, view, edit, and delete car projects, tasks, and workshop members.
@@ -18,105 +65,6 @@ to the final checks.
   your username in the navigation. The dashboard also counts visits per session.
 - Sign in to a shared workshop workspace with server-rendered templates and
   custom CSS. All five models are also available in Django admin.
-
-## Technology
-
-Python 3.12, Django 5.2.19, SQLite, Django templates, and CSS.
-Dependencies are listed in [requirements.txt](requirements.txt).
-Development takes place on the `develop` branch.
-
-## Local setup
-
-Install Python 3.12 and Git, then clone the development branch:
-
-```text
-git clone --branch develop https://github.com/Maksym-Murtazin/garage-projects.git
-cd garage-projects
-```
-
-### Windows (PowerShell)
-
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe manage.py check
-.\.venv\Scripts\python.exe manage.py migrate
-```
-
-### Linux / macOS
-
-```bash
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python manage.py check
-.venv/bin/python manage.py migrate
-```
-
-Next, choose either the demo workshop or your own administrator account below.
-Create an account before starting the server so you can sign in immediately.
-
-### Option A: demo workshop
-
-Run this after migrations, before creating any accounts or workshop records:
-
-```powershell
-.\.venv\Scripts\python.exe manage.py seed_demo
-```
-
-On Linux/macOS:
-
-```bash
-.venv/bin/python manage.py seed_demo
-```
-
-This creates fictional data: **4 members, 3 manufacturers, 5 categories,
-5 projects, and 12 tasks**. Examples include restoration and track preparation,
-all project and task statuses, different priorities, unassigned tasks, and a
-project without a team or tasks. Due dates are relative to the first run.
-
-Sign in as **demo** using the randomly generated password printed by the command.
-Save it locally: the password is shown only once. This account has no admin
-privileges. The other demo members cannot sign in until a password is set.
-
-The command only populates an empty workshop database. If any accounts or
-workshop records exist, it changes nothing. Re-running it does not duplicate
-records, reset passwords, or overwrite edits. Loading is atomic: a failure
-leaves no partial demo data. Use a separate empty local database if you want
-sample data without replacing existing work.
-
-To reset the demo password:
-
-```powershell
-.\.venv\Scripts\python.exe manage.py changepassword demo
-```
-
-On Linux/macOS, use `.venv/bin/python manage.py changepassword demo`.
-
-### Option B: your own account
-
-Create an administrator for an empty workshop, or add one after loading the demo:
-
-```powershell
-.\.venv\Scripts\python.exe manage.py createsuperuser
-```
-
-On Linux/macOS, use `.venv/bin/python manage.py createsuperuser`.
-Enter a username, email, unique employee code, and password when prompted.
-An employee code is `GRG` followed by five digits, such as `GRG00001`.
-The demo already uses `GRG00001` through `GRG00004`; choose a different code
-when adding an administrator to it.
-
-### Start the server
-
-```powershell
-.\.venv\Scripts\python.exe manage.py runserver
-```
-
-On Linux/macOS, use `.venv/bin/python manage.py runserver`.
-Open [the workshop](http://127.0.0.1:8000/) and sign in. Use **Sign out** to end
-the session and `Ctrl+C` in the terminal to stop the server.
-The [admin site](http://127.0.0.1:8000/admin/) requires a superuser or a staff
-account with the appropriate permissions.
 
 ## Using the workshop
 
@@ -166,7 +114,21 @@ completed work.
 - Deletions require confirmation. Form submissions, joining, leaving, and
   signing out use POST requests with CSRF protection.
 
-## Data model and source layout
+## Developing
+
+The application uses Django, SQLite, server-rendered templates, and CSS.
+See [requirements.txt](requirements.txt) for the pinned Django version.
+With the virtual environment active, run:
+
+```sh
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py test
+```
+
+The test suite uses a separate database.
+
+### Data model and source layout
 
 | Model | Purpose and relationships |
 | --- | --- |
@@ -185,29 +147,6 @@ completed work.
 | `workshop/static/workshop/css/styles.css` | Shared site styles |
 | `templates/` | Base layout, login page, and pagination include |
 
-## Checks and tests
-
-On Windows (PowerShell):
-
-```powershell
-.\.venv\Scripts\python.exe manage.py check
-.\.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
-.\.venv\Scripts\python.exe manage.py test
-```
-
-On Linux/macOS:
-
-```bash
-.venv/bin/python manage.py check
-.venv/bin/python manage.py makemigrations --check --dry-run
-.venv/bin/python manage.py test
-```
-
-Tests cover model validation, admin integration, authentication, CRUD operations,
-search and filters, pagination, team assignments, protected deletion, project
-progress, dashboard links, and demo data loading. Django creates a separate test
-database; running tests does not replace the local workshop data.
-
 ## Configuration
 
 Management commands use `config.settings.dev` by default. This enables debug
@@ -225,6 +164,21 @@ Use [.env.example](.env.example) as a template. Set the values in your hosting
 environment or configure your process launcher to load a private `.env` file.
 Django reads the process environment and does not load that file automatically.
 
-Run `python manage.py check --deploy` with the production environment before
-deployment. Configure TLS at the web server and serve the output of
-`python manage.py collectstatic` from `staticfiles/`.
+## Deployment
+
+With production environment variables set, run these commands on the host:
+
+```sh
+python manage.py check --deploy
+python manage.py migrate
+python manage.py collectstatic --noinput
+```
+
+Use a production WSGI or ASGI server with `config.wsgi:application` or
+`config.asgi:application`. Configure the host to serve `/static/` from
+`staticfiles/` and terminate HTTPS. If a proxy terminates TLS, configure
+Django to recognize secure requests only from that trusted proxy.
+Keep the SQLite file on persistent storage and verify that a backup can be restored.
+
+Review the [Django deployment checklist](https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/)
+against the target host before release.
