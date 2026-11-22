@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.title }} | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <a href="{% url 'workshop:project-list' %}">Back to projects</a>
+    <h1>{{ project.title }}</h1>
+    <p class="muted">{{ project.manufacturer.name }} {{ project.model }} · {{ project.year }}</p>
+    <a class="button" href="{% url 'workshop:project-update' project.pk %}">Edit project</a>
+    <a class="button danger" href="{% url 'workshop:project-delete' project.pk %}">Delete project</a>
+  </section>
+  <div class="project-overview">
+    <section class="panel">
+      <h2>Project details</h2>
+      <dl class="project-facts">
+        <dt>Manufacturer</dt><dd>{{ project.manufacturer.name }}</dd>
+        <dt>Model</dt><dd>{{ project.model }}</dd>
+        <dt>Year</dt><dd>{{ project.year }}</dd>
+        <dt>Status</dt><dd>{{ project.get_status_display }}</dd>
+      </dl>
+      <div class="project-progress-summary">
+        <h2>Task progress</h2>
+        {% include "workshop/includes/project_progress.html" %}
+      </div>
+      <h2>Description</h2>
+      {% if project.description %}
+        <div class="project-description">{{ project.description|linebreaks }}</div>
+      {% else %}
+        <p class="muted">No description yet.</p>
+      {% endif %}
+    </section>
+    <section class="panel">
+      <h2>Project team</h2>
+      <p><a href="{% url 'workshop:project-team' project.pk %}">Manage team</a></p>
+      <ul class="team-list">
+        {% for member in project.members.all %}
+          <li><a href="{% url 'members:member-detail' member.pk %}">{{ member }}</a> <span class="muted">· {{ member.employee_code }}</span></li>
+        {% empty %}
+          <li class="muted">No members have joined this project yet.</li>
+        {% endfor %}
+      </ul>
+      {% if is_project_member %}
+        <p class="muted" id="leave-project-help">Leaving the team will unassign all your tasks in this project, including completed tasks. Their statuses will stay unchanged.</p>
+        <form method="post" action="{% url 'workshop:project-leave' project.pk %}">
+          {% csrf_token %}
+          <button type="submit" aria-describedby="leave-project-help">Leave project</button>
+        </form>
+      {% else %}
+        <form method="post" action="{% url 'workshop:project-join' project.pk %}">
+          {% csrf_token %}
+          <button type="submit">Join project</button>
+        </form>
+      {% endif %}
+    </section>
+  </div>
+  <section class="project-tasks" aria-labelledby="tasks-heading">
+    <h2 id="tasks-heading">Project tasks</h2>
+    <p><a class="button" href="{% url 'workshop:task-create' project.pk %}">Create task</a></p>
+    {% if tasks %}
+      <div class="table-container">
+        <table>
+          <caption class="visually-hidden">Tasks for {{ project.title }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Task</th>
+              <th scope="col">Category</th>
+              <th scope="col">Assignee</th>
+              <th scope="col">Status</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Due date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              <tr>
+                <th scope="row"><a href="{{ task.get_absolute_url }}">{{ task.title }}</a></th>
+                <td>{{ task.category.name }}</td>
+                <td>{{ task.assignee|default:"Unassigned" }}</td>
+                <td>{{ task.get_status_display }}</td>
+                <td>{{ task.get_priority_display }}</td>
+                <td>{{ task.due_date|date:"M j, Y"|default:"No due date" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="panel muted">No tasks have been added to this project yet.</p>
+    {% endif %}
+  </section>
+{% endblock %}

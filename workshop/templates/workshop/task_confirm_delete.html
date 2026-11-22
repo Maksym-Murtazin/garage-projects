@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Delete task | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Tasks</p>
+    <h1>Delete task</h1>
+  </section>
+  <section class="panel edit-form">
+    <p>Are you sure you want to delete <strong>{{ task.title }}</strong>
+      from <strong>{{ task.project.title }}</strong>?</p>
+    <p>Only this task will be deleted. The project and its other tasks will be kept.</p>
+    <p>This action cannot be undone.</p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-actions">
+        <button class="danger" type="submit">Delete task</button>
+        <a href="{{ task.get_absolute_url }}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

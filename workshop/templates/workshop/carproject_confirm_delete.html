@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Delete project | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Projects</p>
+    <h1>Delete project</h1>
+  </section>
+  <section class="panel edit-form">
+    <p>Are you sure you want to delete <strong>{{ project.title }}</strong>?</p>
+    <p>This will permanently delete the project and all {{ project.tasks.count }} of its tasks.
+      Team member accounts, the manufacturer, and task categories will be kept.</p>
+    <p>This action cannot be undone.</p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-actions">
+        <button class="danger" type="submit">Delete project</button>
+        <a href="{{ project.get_absolute_url }}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

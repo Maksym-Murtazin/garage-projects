@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit category{% else %}Create category{% endif %} | Garage Projects{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <p class="eyebrow">Workshop / Categories</p>
+    <h1>{% if object %}Edit category{% else %}Create category{% endif %}</h1>
+  </section>
+  <form method="post" class="panel edit-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class="form-field">
+        {{ field.label_tag }}
+        {{ field }}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="form-actions">
+      <button type="submit">{% if object %}Save changes{% else %}Create category{% endif %}</button>
+      <a href="{% url 'workshop:category-list' %}">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

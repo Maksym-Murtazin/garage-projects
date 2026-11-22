@@ -1,0 +1,66 @@
+from django import forms
+
+from .models import CarProject, Manufacturer, Task, TaskCategory
+
+
+class TaskCategoryForm(forms.ModelForm):
+    class Meta:
+        model = TaskCategory
+        fields = ("name",)
+
+
+class ManufacturerForm(forms.ModelForm):
+    class Meta:
+        model = Manufacturer
+        fields = ("name", "country")
+
+
+class CarProjectForm(forms.ModelForm):
+    class Meta:
+        model = CarProject
+        fields = ("title", "manufacturer", "model", "year", "description", "status")
+        labels = {"model": "Car model", "year": "Production year"}
+        widgets = {"description": forms.Textarea(attrs={"rows": 5})}
+
+
+class ProjectTeamForm(forms.ModelForm):
+    class Meta:
+        model = CarProject
+        fields = ("members",)
+        labels = {"members": "Team members"}
+        widgets = {"members": forms.CheckboxSelectMultiple}
+
+
+class ProjectStatusForm(forms.Form):
+    status = forms.ChoiceField(
+        choices=[("", "All statuses"), *CarProject.Status.choices], required=False,
+    )
+
+
+class TaskFilterForm(forms.Form):
+    q = forms.CharField(label="Search tasks", required=False)
+    status = forms.ChoiceField(
+        choices=[("", "All statuses"), ("open", "Open tasks"), *Task.Status.choices], required=False,
+    )
+    priority = forms.ChoiceField(
+        choices=[("", "All priorities"), *Task.Priority.choices], required=False,
+    )
+    project = forms.ModelChoiceField(
+        queryset=CarProject.objects.all(), empty_label="All projects", required=False,
+    )
+
+
+class TaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = ("title", "description", "category", "assignee", "status", "priority", "due_date")
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 5}),
+            "due_date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+        }
+
+    def __init__(self, *args, project, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.instance.project = project
+        self.fields["assignee"].queryset = project.members.all()
+        self.fields["assignee"].empty_label = "Unassigned"
