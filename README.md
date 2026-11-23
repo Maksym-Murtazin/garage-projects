@@ -150,7 +150,7 @@ The test suite uses a separate database.
 ## Configuration
 
 Management commands use `config.settings.dev` by default. This enables debug
-pages and uses a development-only key for local testing.
+pages and uses SQLite and a development-only key for local testing.
 
 WSGI and ASGI default to `config.settings.prod`, which disables debug pages and
 requires HTTPS. Set these environment variables for the production server and
@@ -161,8 +161,31 @@ for production management commands such as migrations and static collection:
 - `DJANGO_ALLOWED_HOSTS` — the deployment hostnames, separated by commas.
 
 Use [.env.example](.env.example) as a template. Set the values in your hosting
-environment or configure your process launcher to load a private `.env` file.
-Django reads the process environment and does not load that file automatically.
+environment or copy the template to a private `.env` beside `manage.py`.
+Management commands, WSGI, and ASGI load this file at startup. Variables
+already set in the process take precedence.
+
+### PostgreSQL on Neon
+
+Production uses PostgreSQL. In Neon, open **Connect** for the intended branch
+and database. Copy the database name, role, raw password, and hostname into
+`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_HOST`.
+Use the hostname including `-pooler` when pooling is enabled.
+`POSTGRES_DB_PORT` defaults to 5432. The connection requires TLS and channel binding.
+
+To move an existing local workshop to an **empty** Neon database, run the
+following from the project root. The private export includes password hashes
+and audit entries. Keep it outside the repository and delete it after verification.
+
+```sh
+python manage.py dumpdata auth.Group members workshop admin.LogEntry --all --natural-foreign --settings=config.settings.dev --output=../garage-transfer.json
+python manage.py migrate --settings=config.settings.prod
+python manage.py loaddata ../garage-transfer.json --settings=config.settings.prod
+python manage.py showmigrations --settings=config.settings.prod
+```
+
+Check the member, project, and task counts against the local workshop. For a
+fresh installation, skip the export and import and follow the deployment steps below.
 
 ## Deployment
 
@@ -178,7 +201,7 @@ Use a production WSGI or ASGI server with `config.wsgi:application` or
 `config.asgi:application`. Configure the host to serve `/static/` from
 `staticfiles/` and terminate HTTPS. If a proxy terminates TLS, configure
 Django to recognize secure requests only from that trusted proxy.
-Keep the SQLite file on persistent storage and verify that a backup can be restored.
+Configure backups for the production PostgreSQL database and verify that a backup can be restored.
 
 Review the [Django deployment checklist](https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/)
 against the target host before release.

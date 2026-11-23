@@ -20,3 +20,25 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = True
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+
+def required_database_setting(name):
+    value = os.environ.get(name)
+    if not value:
+        raise ImproperlyConfigured(f"Set {name} for the production PostgreSQL database.")
+    return value
+
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": required_database_setting("POSTGRES_DB"),
+        "USER": required_database_setting("POSTGRES_USER"),
+        "PASSWORD": required_database_setting("POSTGRES_PASSWORD"),
+        "HOST": required_database_setting("POSTGRES_HOST"),
+        "PORT": os.environ.get("POSTGRES_DB_PORT", "5432"),
+        "OPTIONS": {"sslmode": "require", "channel_binding": "require"},
+        # Neon pooled connections use transaction pooling.
+        "DISABLE_SERVER_SIDE_CURSORS": True,
+    }
+}
