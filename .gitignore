@@ -354,7 +354,8 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python,django,pycharm+all
 
 # Garage Projects
-/staticfiles/
+/staticfiles/*
+!/staticfiles/.gitkeep
 *.sqlite3
 *.sqlite3-journal
 .env.*

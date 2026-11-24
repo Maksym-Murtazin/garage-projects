@@ -198,8 +198,9 @@ python manage.py collectstatic --noinput
 ```
 
 Use a production WSGI or ASGI server with `config.wsgi:application` or
-`config.asgi:application`. Configure the host to serve `/static/` from
-`staticfiles/` and terminate HTTPS. If a proxy terminates TLS, configure
+`config.asgi:application`. Run `collectstatic` during the build so the deployed application
+includes `staticfiles/`. WhiteNoise serves the collected workshop and Django
+admin assets under `/static/`. Configure HTTPS on the host. If a proxy terminates TLS, configure
 Django to recognize secure requests only from that trusted proxy.
 Configure backups for the production PostgreSQL database and verify that a backup can be restored.
 
