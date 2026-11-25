@@ -4,6 +4,8 @@ A Django application for a small tuning and restoration workshop. Manage car
 projects, coordinate project teams, and track work from the first inspection
 to the final checks.
 
+[Open the live Garage Projects site](https://garage-projects.onrender.com/)
+
 ## Getting started
 
 Install Git and Python 3.12, then clone the project:
