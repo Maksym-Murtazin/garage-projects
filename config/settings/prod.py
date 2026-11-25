@@ -13,12 +13,17 @@ ALLOWED_HOSTS = [
     host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
     if host.strip()
 ]
+render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
 if not ALLOWED_HOSTS or "*" in ALLOWED_HOSTS:
     raise ImproperlyConfigured("Set DJANGO_ALLOWED_HOSTS to your deployment hostnames.")
 
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = True
+if os.environ.get("RENDER") == "true":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 MIDDLEWARE = [*MIDDLEWARE]
 MIDDLEWARE.insert(
     MIDDLEWARE.index("django.middleware.security.SecurityMiddleware") + 1,
@@ -46,7 +51,7 @@ DATABASES = {
         "USER": required_database_setting("POSTGRES_USER"),
         "PASSWORD": required_database_setting("POSTGRES_PASSWORD"),
         "HOST": required_database_setting("POSTGRES_HOST"),
-        "PORT": os.environ.get("POSTGRES_DB_PORT", "5432"),
+        "PORT": required_database_setting("POSTGRES_DB_PORT"),
         "OPTIONS": {"sslmode": "require", "channel_binding": "require"},
         # Neon pooled connections use transaction pooling.
         "DISABLE_SERVER_SIDE_CURSORS": True,

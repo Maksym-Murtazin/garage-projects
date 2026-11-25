@@ -171,7 +171,7 @@ Production uses PostgreSQL. In Neon, open **Connect** for the intended branch
 and database. Copy the database name, role, raw password, and hostname into
 `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_HOST`.
 Use the hostname including `-pooler` when pooling is enabled.
-`POSTGRES_DB_PORT` defaults to 5432. The connection requires TLS and channel binding.
+Set `POSTGRES_DB_PORT=5432` for Neon. The connection requires TLS and channel binding.
 
 To move an existing local workshop to an **empty** Neon database, run the
 following from the project root. The private export includes password hashes
@@ -206,3 +206,20 @@ Configure backups for the production PostgreSQL database and verify that a backu
 
 Review the [Django deployment checklist](https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/)
 against the target host before release.
+
+### Render web service
+
+Connect the GitHub repository as a Python web service on the Free plan.
+Select the `main` branch and use the repository root.
+
+| Setting | Value |
+| --- | --- |
+| Build Command | `./build.sh` |
+| Start Command | `gunicorn config.wsgi:application --workers 1 --threads 10` |
+
+Set `DJANGO_SETTINGS_MODULE=config.settings.prod`, a private `DJANGO_SECRET_KEY`,
+and all five Neon connection variables from `.env.example` in the service
+environment. Render supplies `RENDER_EXTERNAL_HOSTNAME` automatically.
+Use `DJANGO_ALLOWED_HOSTS` for additional custom domains. The build installs
+dependencies, collects static files, and applies pending migrations to Neon.
+After deployment, open the service URL and verify the login page and its styles.
